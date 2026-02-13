@@ -3,6 +3,6 @@ Leverages deep neural networks to automatically process, interpret, and derive i
 # Dataset and Preprocessing
 This project utilizes brain CT scan images for deep learning-based analysis of brain strokes. The original dataset, consisting of CT images annotated for stroke detection, is sourced from the following Kaggle repository:
 
-Original Dataset: Brain Stroke CT Dataset by Özgür Aslan
+Original Dataset: Brain Stroke CT Dataset by Özgür Aslan. https://www.kaggle.com/datasets/ozguraslank/brain-stroke-ct-dataset
 
-Preprocessed Data: Preprocessed Brain CT Data by Rishitha R.
+Preprocessed Data: Preprocessed Brain CT Data by Rishitha R. https://www.kaggle.com/datasets/rokkamrishitha/preprocessed-data

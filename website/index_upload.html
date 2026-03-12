@@ -1,0 +1,2049 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>S-SCAN — AI Brain MRI Diagnostics</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <style>
+            /* ── The complete CSS remains 100% unchanged ── */
+            *, *::before, *::after {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0
+            }
+
+            :root {
+                --navy: #04082a;
+                --navy-mid: #0a0f2d;
+                --navy-card: #0d1540;
+                --navy-light: #10277a;
+                --accent: #ff4500;
+                --accent-2: #ff6a33;
+                --accent-glow: rgba(255,69,0,0.22);
+                --cyan: #00d4ff;
+                --cyan-dim: rgba(0,212,255,0.12);
+                --white: #ffffff;
+                --off-white: #e8eaf2;
+                --muted: rgba(200,208,255,0.58);
+                --border: rgba(255,255,255,0.07);
+                --border-hot: rgba(255,69,0,0.3);
+            }
+
+            html {
+                scroll-behavior: smooth
+            }
+
+            body {
+                font-family: 'Manrope',sans-serif;
+                background: var(--navy);
+                color: var(--white);
+                overflow-x: hidden
+            }
+
+            ::-webkit-scrollbar {
+                width: 5px
+            }
+
+            ::-webkit-scrollbar-track {
+                background: var(--navy)
+            }
+
+            ::-webkit-scrollbar-thumb {
+                background: var(--accent);
+                border-radius: 3px
+            }
+
+            body::before {
+                content: '';
+                position: fixed;
+                inset: 0;
+                background-image: linear-gradient(rgba(16,39,122,.18) 1px,transparent 1px),linear-gradient(90deg,rgba(16,39,122,.18) 1px,transparent 1px);
+                background-size: 60px 60px;
+                pointer-events: none;
+                z-index: 0
+            }
+
+            .orb {
+                position: fixed;
+                border-radius: 50%;
+                filter: blur(80px);
+                pointer-events: none;
+                z-index: 0;
+                animation: drift 12s ease-in-out infinite alternate
+            }
+
+            .orb-1 {
+                width: 500px;
+                height: 500px;
+                background: rgba(255,69,0,.07);
+                top: -100px;
+                right: -100px
+            }
+
+            .orb-2 {
+                width: 400px;
+                height: 400px;
+                background: rgba(0,212,255,.05);
+                bottom: 10%;
+                left: -80px;
+                animation-delay: -5s
+            }
+
+            .orb-3 {
+                width: 300px;
+                height: 300px;
+                background: rgba(16,39,122,.4);
+                top: 40%;
+                right: 30%;
+                animation-delay: -3s
+            }
+
+            @keyframes drift {
+                from {
+                    transform: translate(0,0)scale(1)
+                }
+
+                to {
+                    transform: translate(30px,20px)scale(1.08)
+                }
+            }
+
+            nav {
+                position: sticky;
+                top: 0;
+                z-index: 200;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 16px 64px;
+                background: rgba(4,8,42,.82);
+                backdrop-filter: blur(20px);
+                border-bottom: 1px solid var(--border)
+            }
+
+            .logo {
+                font-family: 'Plus Jakarta Sans',sans-serif;
+                font-size: 24px;
+                font-weight: 800;
+                letter-spacing: 1px
+            }
+
+                .logo .s {
+                    color: var(--accent)
+                }
+
+                .logo .scan {
+                    color: var(--white)
+                }
+
+                .logo .dot {
+                    color: var(--cyan)
+                }
+
+            .nav-links {
+                display: flex;
+                align-items: center;
+                gap: 4px
+            }
+
+                .nav-links a {
+                    color: var(--muted);
+                    text-decoration: none;
+                    font-size: 14px;
+                    font-weight: 500;
+                    padding: 8px 16px;
+                    border-radius: 8px;
+                    transition: all .2s
+                }
+
+                    .nav-links a:hover {
+                        color: var(--white);
+                        background: rgba(255,255,255,.06)
+                    }
+
+                    .nav-links a.active:not(.nav-cta) {
+                        color: var(--white);
+                        background: rgba(255,255,255,.08)
+                    }
+
+            .nav-cta {
+                background: linear-gradient(135deg,var(--accent),var(--accent-2)) !important;
+                color: var(--white) !important;
+                padding: 10px 22px !important;
+                border-radius: 10px !important;
+                font-weight: 700 !important;
+                box-shadow: 0 4px 18px var(--accent-glow)
+            }
+
+                .nav-cta:hover {
+                    transform: translateY(-1px)
+                }
+
+            .hero {
+                position: relative;
+                z-index: 1;
+                min-height: 94vh;
+                display: flex;
+                align-items: center;
+                padding: 80px 64px;
+                gap: 60px;
+                overflow: hidden
+            }
+
+            .hero-text {
+                flex: 1.1;
+                max-width: 620px
+            }
+
+            .badge {
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                font-size: 11px;
+                font-weight: 700;
+                letter-spacing: 2.5px;
+                text-transform: uppercase;
+                color: var(--cyan);
+                background: var(--cyan-dim);
+                border: 1px solid rgba(0,212,255,.25);
+                padding: 7px 16px;
+                border-radius: 30px;
+                margin-bottom: 30px
+            }
+
+            .badge-dot {
+                width: 6px;
+                height: 6px;
+                background: var(--cyan);
+                border-radius: 50%;
+                animation: blink 1.6s infinite
+            }
+
+            @keyframes blink {
+                0%,100% {
+                    opacity: 1
+                }
+
+                50% {
+                    opacity: .2
+                }
+            }
+
+            .hero h1 {
+                font-family: 'Plus Jakarta Sans',sans-serif;
+                font-size: clamp(40px,5.5vw,68px);
+                font-weight: 800;
+                line-height: 1.08;
+                letter-spacing: -1.5px;
+                margin-bottom: 24px
+            }
+
+                .hero h1 .a {
+                    color: var(--accent)
+                }
+
+                .hero h1 .c {
+                    color: var(--cyan)
+                }
+
+            .hero-sub {
+                font-size: 17px;
+                line-height: 1.9;
+                color: var(--muted);
+                margin-bottom: 42px;
+                max-width: 500px
+            }
+
+            .hero-btns {
+                display: flex;
+                gap: 14px;
+                flex-wrap: wrap;
+                align-items: center
+            }
+
+            .btn {
+                font-family: 'Manrope',sans-serif;
+                font-size: 14px;
+                font-weight: 700;
+                padding: 14px 30px;
+                border-radius: 12px;
+                border: none;
+                cursor: pointer;
+                transition: all .25s
+            }
+
+            .btn-fill {
+                background: linear-gradient(135deg,var(--accent),var(--accent-2));
+                color: var(--white);
+                box-shadow: 0 6px 28px var(--accent-glow)
+            }
+
+                .btn-fill:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 12px 36px var(--accent-glow)
+                }
+
+            .btn-outline {
+                background: transparent;
+                color: var(--off-white);
+                border: 1px solid rgba(255,255,255,.2)
+            }
+
+                .btn-outline:hover {
+                    border-color: var(--cyan);
+                    color: var(--cyan);
+                    background: var(--cyan-dim)
+                }
+
+            .hero-trust {
+                margin-top: 48px;
+                display: flex;
+                align-items: center;
+                gap: 20px;
+                flex-wrap: wrap
+            }
+
+            .trust-item {
+                font-size: 13px;
+                color: var(--muted);
+                font-weight: 500
+            }
+
+            .hero-visual {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                gap: 16px;
+                position: relative;
+                z-index: 1
+            }
+
+            .scan-row {
+                display: flex;
+                gap: 16px
+            }
+
+            .scan-tile {
+                border-radius: 16px;
+                overflow: hidden;
+                border: 1px solid var(--border);
+                box-shadow: 0 20px 50px rgba(0,0,0,.5);
+                transition: transform .35s,box-shadow .35s;
+                position: relative
+            }
+
+                .scan-tile:hover {
+                    transform: translateY(-6px);
+                    box-shadow: 0 30px 70px rgba(255,69,0,.15)
+                }
+
+                .scan-tile img {
+                    display: block;
+                    object-fit: cover;
+                    width: 100%
+                }
+
+                .scan-tile.main img {
+                    height: 260px
+                }
+
+                .scan-tile.sm img {
+                    height: 160px
+                }
+
+            .scan-label {
+                position: absolute;
+                bottom: 12px;
+                left: 12px;
+                background: rgba(4,8,42,.82);
+                border: 1px solid var(--border);
+                backdrop-filter: blur(8px);
+                border-radius: 8px;
+                padding: 5px 12px;
+                font-size: 11px;
+                font-weight: 700;
+                letter-spacing: 1px;
+                color: var(--cyan);
+                text-transform: uppercase
+            }
+
+            .live-chip {
+                position: absolute;
+                top: 12px;
+                right: 12px;
+                background: rgba(255,69,0,.15);
+                border: 1px solid var(--border-hot);
+                border-radius: 20px;
+                padding: 4px 12px;
+                font-size: 10px;
+                font-weight: 700;
+                letter-spacing: 1.5px;
+                color: var(--accent);
+                text-transform: uppercase;
+                display: flex;
+                align-items: center;
+                gap: 5px
+            }
+
+                .live-chip::before {
+                    content: '';
+                    width: 5px;
+                    height: 5px;
+                    background: var(--accent);
+                    border-radius: 50%;
+                    animation: blink 1s infinite
+                }
+
+            .stats-strip {
+                position: relative;
+                z-index: 1;
+                display: flex;
+                justify-content: space-around;
+                flex-wrap: wrap;
+                padding: 36px 64px;
+                border-top: 1px solid var(--border);
+                border-bottom: 1px solid var(--border);
+                background: rgba(255,255,255,.02);
+                gap: 20px
+            }
+
+            .stat {
+                text-align: center
+            }
+
+                .stat .num {
+                    font-family: 'Plus Jakarta Sans',sans-serif;
+                    font-size: 38px;
+                    font-weight: 800;
+                    background: linear-gradient(135deg,var(--accent),var(--cyan));
+                    -webkit-background-clip: text;
+                    -webkit-text-fill-color: transparent;
+                    background-clip: text;
+                    line-height: 1
+                }
+
+                .stat .label {
+                    font-size: 12px;
+                    color: var(--muted);
+                    margin-top: 6px;
+                    font-weight: 600
+                }
+
+            section {
+                position: relative;
+                z-index: 1
+            }
+
+            .sec-header {
+                text-align: center;
+                padding: 80px 64px 52px
+            }
+
+            .sec-tag {
+                display: inline-block;
+                font-size: 11px;
+                font-weight: 700;
+                letter-spacing: 3px;
+                text-transform: uppercase;
+                color: var(--accent);
+                margin-bottom: 16px
+            }
+
+            .sec-header h2 {
+                font-family: 'Plus Jakarta Sans',sans-serif;
+                font-size: clamp(28px,3.5vw,46px);
+                font-weight: 800;
+                line-height: 1.15;
+                letter-spacing: -.5px;
+                margin-bottom: 16px
+            }
+
+            .sec-header p {
+                font-size: 16px;
+                color: var(--muted);
+                max-width: 540px;
+                margin: 0 auto;
+                line-height: 1.85
+            }
+
+            .features-wrap {
+                padding: 0 64px 80px
+            }
+
+            .features-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit,minmax(260px,1fr));
+                gap: 22px
+            }
+
+            .feat-card {
+                background: var(--navy-card);
+                border: 1px solid var(--border);
+                border-radius: 18px;
+                overflow: hidden;
+                transition: all .3s
+            }
+
+                .feat-card:hover {
+                    transform: translateY(-7px);
+                    border-color: var(--border-hot);
+                    box-shadow: 0 20px 60px rgba(255,69,0,.13)
+                }
+
+                .feat-card img {
+                    width: 100%;
+                    height: 195px;
+                    object-fit: cover;
+                    display: block
+                }
+
+            .feat-body {
+                padding: 26px 28px 30px
+            }
+
+            .feat-icon {
+                width: 44px;
+                height: 44px;
+                background: linear-gradient(135deg,rgba(255,69,0,.18),rgba(0,212,255,.1));
+                border-radius: 12px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 20px;
+                margin-bottom: 16px;
+                border: 1px solid var(--border)
+            }
+
+            .feat-card h3 {
+                font-family: 'Plus Jakarta Sans',sans-serif;
+                font-size: 16px;
+                font-weight: 700;
+                margin-bottom: 10px
+            }
+
+            .feat-card p {
+                font-size: 14px;
+                color: var(--muted);
+                line-height: 1.75
+            }
+
+            .tech-section {
+                background: linear-gradient(180deg,rgba(16,39,122,.2) 0%,rgba(4,8,42,.7) 100%);
+                border-top: 1px solid var(--border);
+                border-bottom: 1px solid var(--border)
+            }
+
+            .tech-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 60px;
+                padding: 0 64px 80px;
+                align-items: center
+            }
+
+            .tech-visual {
+                border-radius: 20px;
+                overflow: hidden;
+                border: 1px solid var(--border);
+                box-shadow: 0 30px 80px rgba(0,0,0,.5);
+                position: relative
+            }
+
+                .tech-visual img {
+                    width: 100%;
+                    height: 380px;
+                    object-fit: cover;
+                    display: block
+                }
+
+            .tech-overlay {
+                position: absolute;
+                inset: 0;
+                background: linear-gradient(to top,rgba(4,8,42,.7) 0%,transparent 50%)
+            }
+
+            .tech-overlay-text {
+                position: absolute;
+                bottom: 24px;
+                left: 24px;
+                right: 24px
+            }
+
+                .tech-overlay-text h4 {
+                    font-family: 'Plus Jakarta Sans',sans-serif;
+                    font-size: 18px;
+                    font-weight: 700;
+                    margin-bottom: 6px
+                }
+
+                .tech-overlay-text p {
+                    font-size: 13px;
+                    color: var(--muted)
+                }
+
+            .tech-content h2 {
+                font-family: 'Plus Jakarta Sans',sans-serif;
+                font-size: clamp(26px,3vw,38px);
+                font-weight: 800;
+                line-height: 1.2;
+                letter-spacing: -.5px;
+                margin-bottom: 20px
+            }
+
+            .tech-content > p {
+                font-size: 15px;
+                color: var(--muted);
+                line-height: 1.85;
+                margin-bottom: 32px
+            }
+
+            .tech-specs {
+                display: flex;
+                flex-direction: column;
+                gap: 14px
+            }
+
+            .spec-row {
+                display: flex;
+                align-items: center;
+                gap: 14px;
+                background: rgba(255,255,255,.03);
+                border: 1px solid var(--border);
+                border-radius: 12px;
+                padding: 14px 18px;
+                transition: border-color .2s
+            }
+
+                .spec-row:hover {
+                    border-color: var(--border-hot)
+                }
+
+            .spec-icon {
+                font-size: 22px
+            }
+
+            .spec-text h5 {
+                font-size: 14px;
+                font-weight: 700;
+                margin-bottom: 2px
+            }
+
+            .spec-text p {
+                font-size: 12px;
+                color: var(--muted)
+            }
+
+            .steps-wrap {
+                padding: 0 64px 80px
+            }
+
+            .steps-row {
+                display: grid;
+                grid-template-columns: repeat(4,1fr);
+                position: relative
+            }
+
+                .steps-row::before {
+                    content: '';
+                    position: absolute;
+                    top: 36px;
+                    left: 10%;
+                    right: 10%;
+                    height: 2px;
+                    background: linear-gradient(90deg,var(--accent),var(--cyan));
+                    opacity: .25;
+                    z-index: 0
+                }
+
+            .step {
+                text-align: center;
+                padding: 0 20px;
+                position: relative;
+                z-index: 1
+            }
+
+            .step-circle {
+                width: 72px;
+                height: 72px;
+                border-radius: 50%;
+                margin: 0 auto 22px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-family: 'Plus Jakarta Sans',sans-serif;
+                font-size: 22px;
+                font-weight: 800;
+                background: var(--navy-card);
+                border: 2px solid var(--border-hot);
+                color: var(--accent);
+                box-shadow: 0 0 30px rgba(255,69,0,.15);
+                transition: all .3s
+            }
+
+            .step:hover .step-circle {
+                background: linear-gradient(135deg,var(--accent),var(--accent-2));
+                color: var(--white);
+                border-color: transparent
+            }
+
+            .step h4 {
+                font-family: 'Plus Jakarta Sans',sans-serif;
+                font-size: 15px;
+                font-weight: 700;
+                margin-bottom: 10px
+            }
+
+            .step p {
+                font-size: 13px;
+                color: var(--muted);
+                line-height: 1.75
+            }
+
+            .team-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit,minmax(220px,1fr));
+                gap: 24px;
+                padding: 0 64px 80px
+            }
+
+            .team-card {
+                background: var(--navy-card);
+                border: 1px solid var(--border);
+                border-radius: 18px;
+                overflow: hidden;
+                text-align: center;
+                transition: all .3s
+            }
+
+                .team-card:hover {
+                    transform: translateY(-6px);
+                    border-color: var(--border-hot);
+                    box-shadow: 0 20px 50px rgba(255,69,0,.1)
+                }
+
+            .team-avatar {
+                width: 100%;
+                height: 220px;
+                object-fit: cover;
+                object-position: top;
+                display: block;
+                filter: grayscale(20%);
+                transition: filter .3s
+            }
+
+            .team-card:hover .team-avatar {
+                filter: grayscale(0%)
+            }
+
+            .team-body {
+                padding: 22px 20px 26px
+            }
+
+                .team-body h4 {
+                    font-family: 'Plus Jakarta Sans',sans-serif;
+                    font-size: 15px;
+                    font-weight: 700;
+                    margin-bottom: 4px
+                }
+
+            .team-role {
+                font-size: 12px;
+                color: var(--accent);
+                font-weight: 600;
+                letter-spacing: .5px;
+                margin-bottom: 10px
+            }
+
+            .team-body p {
+                font-size: 13px;
+                color: var(--muted);
+                line-height: 1.65
+            }
+
+            .testimonials-section {
+                background: linear-gradient(135deg,rgba(10,15,45,.9),rgba(4,8,42,1));
+                border-top: 1px solid var(--border);
+                border-bottom: 1px solid var(--border)
+            }
+
+            .testi-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit,minmax(300px,1fr));
+                gap: 24px;
+                padding: 0 64px 80px
+            }
+
+            .testi-card {
+                background: var(--navy-card);
+                border: 1px solid var(--border);
+                border-radius: 18px;
+                padding: 32px 30px;
+                transition: all .3s;
+                position: relative
+            }
+
+                .testi-card:hover {
+                    border-color: var(--border-hot);
+                    transform: translateY(-4px)
+                }
+
+                .testi-card::before {
+                    content: '"';
+                    position: absolute;
+                    top: 18px;
+                    right: 22px;
+                    font-size: 80px;
+                    line-height: 1;
+                    font-family: Georgia,serif;
+                    color: rgba(255,69,0,.12)
+                }
+
+            .stars {
+                color: #ffc107;
+                font-size: 14px;
+                letter-spacing: 2px;
+                margin-bottom: 16px
+            }
+
+            .testi-card blockquote {
+                font-size: 15px;
+                color: var(--off-white);
+                line-height: 1.8;
+                font-style: italic;
+                margin-bottom: 24px
+            }
+
+            .testi-author {
+                display: flex;
+                align-items: center;
+                gap: 14px
+            }
+
+            .author-avatar {
+                width: 46px;
+                height: 46px;
+                border-radius: 50%;
+                object-fit: cover;
+                border: 2px solid var(--border-hot)
+            }
+
+            .author-info h5 {
+                font-size: 14px;
+                font-weight: 700
+            }
+
+            .author-info span {
+                font-size: 12px;
+                color: var(--muted)
+            }
+
+            .faq-outer {
+                padding: 0 64px 80px
+            }
+
+            .faq-wrap {
+                max-width: 860px;
+                margin: 0 auto
+            }
+
+            .faq-item {
+                border: 1px solid var(--border);
+                border-radius: 14px;
+                margin-bottom: 14px;
+                overflow: hidden;
+                transition: border-color .2s;
+                background: var(--navy-card)
+            }
+
+                .faq-item:hover, .faq-item.open {
+                    border-color: var(--border-hot)
+                }
+
+            .faq-q {
+                width: 100%;
+                background: transparent;
+                border: none;
+                cursor: pointer;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 22px 26px;
+                font-family: 'Plus Jakarta Sans',sans-serif;
+                font-size: 15px;
+                font-weight: 700;
+                color: var(--white);
+                text-align: left;
+                gap: 20px;
+                transition: background .2s
+            }
+
+                .faq-q:hover {
+                    background: rgba(255,255,255,.03)
+                }
+
+            .faq-arrow {
+                min-width: 28px;
+                height: 28px;
+                border-radius: 8px;
+                background: rgba(255,69,0,.1);
+                border: 1px solid var(--border-hot);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: var(--accent);
+                font-size: 16px;
+                transition: all .3s
+            }
+
+            .faq-item.open .faq-arrow {
+                transform: rotate(45deg);
+                background: var(--accent);
+                color: var(--white)
+            }
+
+            .faq-a {
+                max-height: 0;
+                overflow: hidden;
+                transition: max-height .4s ease,padding .3s;
+                padding: 0 26px
+            }
+
+            .faq-item.open .faq-a {
+                max-height: 300px;
+                padding: 0 26px 22px
+            }
+
+            .faq-a p {
+                font-size: 14px;
+                color: var(--muted);
+                line-height: 1.85
+            }
+
+            .contact-section {
+                background: linear-gradient(135deg,#10277a 0%,#04082a 100%);
+                border-top: 1px solid var(--border);
+                padding: 90px 64px;
+                text-align: center;
+                position: relative;
+                overflow: hidden
+            }
+
+                .contact-section::before {
+                    content: '';
+                    position: absolute;
+                    inset: 0;
+                    background: radial-gradient(ellipse at center,rgba(255,69,0,.1) 0%,transparent 60%);
+                    pointer-events: none
+                }
+
+                .contact-section h2 {
+                    font-family: 'Plus Jakarta Sans',sans-serif;
+                    font-size: clamp(30px,4vw,50px);
+                    font-weight: 800;
+                    margin-bottom: 16px;
+                    position: relative
+                }
+
+                .contact-section > p {
+                    font-size: 16px;
+                    color: var(--muted);
+                    margin-bottom: 44px;
+                    position: relative
+                }
+
+            .contact-chips {
+                display: flex;
+                justify-content: center;
+                flex-wrap: wrap;
+                gap: 16px;
+                position: relative
+            }
+
+            .chip {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                background: rgba(255,255,255,.06);
+                border: 1px solid var(--border);
+                border-radius: 40px;
+                padding: 14px 28px;
+                font-size: 14px;
+                font-weight: 600;
+                color: var(--white);
+                text-decoration: none;
+                transition: all .2s
+            }
+
+                .chip:hover {
+                    background: rgba(255,69,0,.12);
+                    border-color: var(--border-hot);
+                    transform: translateY(-2px)
+                }
+
+            .chip-cta {
+                background: linear-gradient(135deg,var(--accent),var(--accent-2)) !important;
+                border: none !important;
+                box-shadow: 0 6px 24px var(--accent-glow)
+            }
+
+            footer {
+                background: #02051a;
+                border-top: 1px solid var(--border);
+                padding: 32px 64px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                flex-wrap: wrap;
+                gap: 16px
+            }
+
+            .foot-logo {
+                font-family: 'Plus Jakarta Sans',sans-serif;
+                font-size: 20px;
+                font-weight: 800
+            }
+
+                .foot-logo .s {
+                    color: var(--accent)
+                }
+
+            footer p {
+                font-size: 13px;
+                color: var(--muted)
+            }
+
+            .foot-links {
+                display: flex;
+                gap: 24px
+            }
+
+                .foot-links a {
+                    font-size: 13px;
+                    color: var(--muted);
+                    text-decoration: none;
+                    transition: color .2s
+                }
+
+                    .foot-links a:hover {
+                        color: var(--white)
+                    }
+
+            .fade-up {
+                opacity: 0;
+                transform: translateY(30px);
+                transition: opacity .6s ease,transform .6s ease
+            }
+
+                .fade-up.visible {
+                    opacity: 1;
+                    transform: translateY(0)
+                }
+
+            /* ═══════════════════════════════════
+           FOLDER UPLOAD MODAL
+        ═══════════════════════════════════ */
+            .modal-overlay {
+                position: fixed;
+                inset: 0;
+                z-index: 1000;
+                background: rgba(2,5,26,.85);
+                backdrop-filter: blur(10px);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                opacity: 0;
+                pointer-events: none;
+                transition: opacity .3s
+            }
+
+                .modal-overlay.show {
+                    opacity: 1;
+                    pointer-events: all
+                }
+
+            .modal {
+                background: linear-gradient(160deg,#0d1540 0%,#060b28 100%);
+                border: 1px solid rgba(255,255,255,.1);
+                border-radius: 24px;
+                width: 100%;
+                max-width: 580px;
+                padding: 40px;
+                position: relative;
+                box-shadow: 0 40px 100px rgba(0,0,0,.7),0 0 60px rgba(255,69,0,.08);
+                transform: translateY(24px) scale(.97);
+                transition: transform .35s cubic-bezier(.34,1.56,.64,1)
+            }
+
+            .modal-overlay.show .modal {
+                transform: translateY(0) scale(1)
+            }
+
+            .modal-close {
+                position: absolute;
+                top: 18px;
+                right: 18px;
+                width: 36px;
+                height: 36px;
+                border-radius: 10px;
+                background: rgba(255,255,255,.06);
+                border: 1px solid var(--border);
+                color: var(--muted);
+                font-size: 18px;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: all .2s
+            }
+
+                .modal-close:hover {
+                    background: rgba(255,69,0,.15);
+                    border-color: var(--border-hot);
+                    color: var(--white)
+                }
+
+            .modal-header {
+                margin-bottom: 28px
+            }
+
+            .modal-tag {
+                font-size: 11px;
+                font-weight: 700;
+                letter-spacing: 2.5px;
+                text-transform: uppercase;
+                color: var(--accent);
+                margin-bottom: 10px
+            }
+
+            .modal-header h3 {
+                font-family: 'Plus Jakarta Sans',sans-serif;
+                font-size: 22px;
+                font-weight: 800;
+                margin-bottom: 6px
+            }
+
+            .modal-header p {
+                font-size: 14px;
+                color: var(--muted);
+                line-height: 1.7
+            }
+
+            .upload-box {
+                border: 2px dashed rgba(255,255,255,.14);
+                border-radius: 16px;
+                padding: 40px 24px;
+                text-align: center;
+                cursor: pointer;
+                transition: all .25s;
+                background: rgba(255,255,255,.02);
+                position: relative
+            }
+
+                .upload-box:hover, .upload-box.drag-over {
+                    border-color: var(--accent);
+                    background: rgba(255,69,0,.05);
+                    box-shadow: 0 0 0 4px rgba(255,69,0,.08)
+                }
+
+                .upload-box.has-files {
+                    border-color: rgba(0,212,255,.4);
+                    background: rgba(0,212,255,.04)
+                }
+
+            .upload-icon {
+                font-size: 48px;
+                margin-bottom: 14px;
+                display: block
+            }
+
+            .upload-box h4 {
+                font-family: 'Plus Jakarta Sans',sans-serif;
+                font-size: 16px;
+                font-weight: 700;
+                margin-bottom: 8px
+            }
+
+            .upload-box p {
+                font-size: 13px;
+                color: var(--muted)
+            }
+
+            .upload-box .scan-badge {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                margin-top: 14px;
+                font-size: 11px;
+                font-weight: 700;
+                letter-spacing: 1.5px;
+                text-transform: uppercase;
+                color: var(--cyan);
+                background: var(--cyan-dim);
+                border: 1px solid rgba(0,212,255,.2);
+                padding: 5px 12px;
+                border-radius: 20px
+            }
+
+            #uploadStatus {
+                margin-top: 16px
+            }
+
+            .status-ok {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                font-size: 13px;
+                font-weight: 600;
+                color: #4ade80;
+                background: rgba(74,222,128,.08);
+                border: 1px solid rgba(74,222,128,.2);
+                padding: 10px 14px;
+                border-radius: 10px;
+                margin-bottom: 8px
+            }
+
+            .status-error {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                font-size: 13px;
+                font-weight: 600;
+                color: #f87171;
+                background: rgba(248,113,113,.08);
+                border: 1px solid rgba(248,113,113,.2);
+                padding: 10px 14px;
+                border-radius: 10px;
+                margin-bottom: 8px
+            }
+
+            .status-warn {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                font-size: 13px;
+                font-weight: 600;
+                color: #fbbf24;
+                background: rgba(251,191,36,.08);
+                border: 1px solid rgba(251,191,36,.2);
+                padding: 10px 14px;
+                border-radius: 10px
+            }
+
+            #fileList {
+                margin-top: 14px;
+                display: flex;
+                flex-direction: column;
+                gap: 6px;
+                max-height: 160px;
+                overflow-y: auto
+            }
+
+                #fileList::-webkit-scrollbar {
+                    width: 4px
+                }
+
+                #fileList::-webkit-scrollbar-thumb {
+                    background: var(--accent);
+                    border-radius: 2px
+                }
+
+            .file-item {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                background: rgba(255,255,255,.04);
+                border: 1px solid var(--border);
+                border-radius: 8px;
+                padding: 8px 12px
+            }
+
+            .file-icon {
+                font-size: 16px;
+                flex-shrink: 0
+            }
+
+            .file-name {
+                font-size: 13px;
+                font-weight: 500;
+                flex: 1;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis
+            }
+
+            .file-size {
+                font-size: 11px;
+                color: var(--muted);
+                flex-shrink: 0
+            }
+
+            .file-more {
+                font-size: 12px;
+                color: var(--muted);
+                text-align: center;
+                padding: 6px;
+                font-weight: 600
+            }
+
+            .modal-actions {
+                margin-top: 22px;
+                display: flex;
+                gap: 12px
+            }
+
+            #proceedBtn {
+                display: none;
+                flex: 1;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+                background: linear-gradient(135deg,var(--accent),var(--accent-2));
+                color: var(--white);
+                border: none;
+                border-radius: 12px;
+                padding: 14px 24px;
+                font-family: 'Manrope',sans-serif;
+                font-size: 15px;
+                font-weight: 700;
+                cursor: pointer;
+                box-shadow: 0 6px 24px var(--accent-glow);
+                transition: all .25s
+            }
+
+                #proceedBtn:hover:not(:disabled) {
+                    transform: translateY(-2px);
+                    box-shadow: 0 10px 32px var(--accent-glow)
+                }
+
+                #proceedBtn:disabled {
+                    opacity: .7;
+                    cursor: not-allowed
+                }
+
+                #proceedBtn.done {
+                    background: linear-gradient(135deg,#16a34a,#22c55e);
+                    box-shadow: 0 6px 24px rgba(34,197,94,.3)
+                }
+
+            .cancel-btn {
+                padding: 14px 22px;
+                background: rgba(255,255,255,.05);
+                border: 1px solid var(--border);
+                border-radius: 12px;
+                color: var(--muted);
+                font-family: 'Manrope',sans-serif;
+                font-size: 14px;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all .2s
+            }
+
+                .cancel-btn:hover {
+                    background: rgba(255,255,255,.09);
+                    color: var(--white)
+                }
+
+            @keyframes spin {
+                to {
+                    transform: rotate(360deg)
+                }
+            }
+
+            .spin {
+                display: inline-block;
+                animation: spin .8s linear infinite
+            }
+
+            @media(max-width:1024px) {
+                nav, .hero, .stats-strip, .features-wrap, .tech-grid, .steps-wrap, .team-grid, .testi-grid, .contact-section, footer, .faq-outer {
+                    padding-left: 28px;
+                    padding-right: 28px
+                }
+
+                .tech-grid {
+                    grid-template-columns: 1fr
+                }
+            }
+
+            @media(max-width:768px) {
+                .hero {
+                    flex-direction: column;
+                    padding: 60px 24px
+                }
+
+                .steps-row {
+                    grid-template-columns: 1fr 1fr
+                }
+
+                    .steps-row::before {
+                        display: none
+                    }
+
+                .sec-header {
+                    padding: 60px 24px 36px
+                }
+
+                .modal {
+                    padding: 28px;
+                    margin: 16px
+                }
+
+                .modal-overlay {
+                    align-items: flex-end
+                }
+            }
+    </style>
+</head>
+<body>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+
+    <!-- FOLDER UPLOAD MODAL -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal">
+            <button class="modal-close" id="modalClose">✕</button>
+            <div class="modal-header">
+                <div class="modal-tag">📁 DICOM Upload</div>
+                <h3>Upload Your DICOM Scans</h3>
+                <p>Select one or more DICOM files (.dcm) from your scan series. You can select multiple files at once.</p>
+            </div>
+
+            <!-- Hidden file input - accepts both files and folders -->
+            <input type="file" id="folderInput" accept=".dcm,.dicom,image/*" multiple style="display:none" />
+            
+            <!-- Hidden single file input for direct image upload -->
+            <input type="file" id="singleFileInput" accept=".dcm,.dicom,image/*" multiple style="display:none" />
+
+            <div class="upload-box" id="uploadBox">
+                <span class="upload-icon">📁</span>
+                <h4>Click to select DICOM files, or drag & drop</h4>
+                <p>Select one or more DICOM (.dcm) files from your scan series</p>
+                <div class="scan-badge">📄 Multiple file upload supported</div>
+            </div>
+
+            <div id="uploadStatus"></div>
+            <div id="fileList"></div>
+
+            <div class="modal-actions">
+                <button class="cancel-btn" id="cancelBtn">Cancel</button>
+                <button id="proceedBtn">⬆️ Upload & Analyse</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- NAV -->
+    <nav>
+        <div class="logo"><span class="s">S</span><span class="scan">-SCAN</span><span class="dot">.</span></div>
+        <div class="nav-links">
+            <a href="#home" data-scroll="home">Home</a>
+            <a href="#services" data-scroll="services">Services</a>
+            <a href="#technology" data-scroll="technology">Technology</a>
+            <a href="#team" data-scroll="team">Team</a>
+            <a href="#testimonials" data-scroll="testimonials">Testimonials</a>
+            <a href="#faq" data-scroll="faq">FAQ</a>
+            <a href="#contact" data-scroll="contact" class="nav-cta">Book a Scan</a>
+        </div>
+    </nav>
+
+    <!-- HERO -->
+    <div class="hero" id="home">
+        <div class="hero-text fade-up">
+            <div class="badge"><span class="badge-dot"></span>FDA-Cleared AI Platform</div>
+            <h1>Smarter <span class="a">Brain</span> MRI<br />Powered by <span class="c">AI</span></h1>
+            <p class="hero-sub">S-SCAN combines clinical-grade MRI hardware with proprietary deep learning to deliver faster, more accurate neurological diagnostics — results in under 24 hours.</p>
+            <div class="hero-btns">
+                <button class="btn btn-fill" id="bookScanBtn">&#128193; Upload DICOM Scan</button>
+                <button class="btn btn-outline">Watch Demo &#9654;</button>
+            </div>
+            <div class="hero-trust">
+                <div class="trust-item">&#10003; HIPAA Compliant</div>
+                <div class="trust-item">&#127973; 200+ Partner Clinics</div>
+                <div class="trust-item">&#129504; 50,000+ Scans</div>
+            </div>
+        </div>
+        <div class="hero-visual fade-up" style="transition-delay:.15s">
+            <div class="scan-row">
+                <div class="scan-tile main" style="flex:1.4">
+                    <img src="data:image/jpeg;base64,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" alt="Brain MRI Sagittal" />
+                    <div class="live-chip">Live AI</div>
+                    <div class="scan-label">Sagittal View</div>
+                </div>
+                <div class="scan-tile main" style="flex:1">
+                    <img src="https://media.sciencephoto.com/c0/38/86/70/c0388670-800px-wm.jpg" alt="Brain MRI Axial" />
+                    <div class="scan-label">Axial View</div>
+                </div>
+            </div>
+            <div class="scan-row">
+                <div class="scan-tile sm" style="flex:1">
+                    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRPT7hNAQDpMnCXnrSvjGz61uTSg95USzQGHQ&s" alt="Coronal" />
+                    <div class="scan-label">Coronal</div>
+                </div>
+                <div class="scan-tile sm" style="flex:1">
+                    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTJsIhG3jOc1xMFyy0LX8WtBSCG4ymz9PIgCQ&s" alt="Tumor Detection" />
+                    <div class="scan-label">Tumor Detection</div>
+                </div>
+                <div class="scan-tile sm" style="flex:1">
+                    <img src="https://futurism.com/wp-content/uploads/2019/05/brain-stimulating-wearables-hype1.png?w=1152&h=605" alt="3D Recon" />
+                    <div class="scan-label">3D Recon</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-strip">
+        <div class="stat"><div class="num">98.4%</div><div class="label">Diagnostic Accuracy</div></div>
+        <div class="stat"><div class="num">3x</div><div class="label">Faster Than Manual</div></div>
+        <div class="stat"><div class="num">50K+</div><div class="label">Brain Scans Processed</div></div>
+        <div class="stat"><div class="num">&lt;24h</div><div class="label">Report Turnaround</div></div>
+        <div class="stat"><div class="num">200+</div><div class="label">Partner Clinics</div></div>
+    </div>
+
+    <!-- SERVICES -->
+    <section id="services">
+        <div class="sec-header fade-up">
+            <div class="sec-tag">Our Capabilities</div>
+            <h2>Precision at Every Layer</h2>
+            <p>From early tumor detection to white matter analysis, our platform covers the full spectrum of neurological imaging needs.</p>
+        </div>
+        <div class="features-wrap">
+            <div class="features-grid">
+                <div class="feat-card fade-up">
+                    <img src="https://www.impactqa.com/wp-content/uploads/2022/02/Artificial-Intelligence-AI-and-its-Assistance-in-Medical-Diagnosis-Blog.png" alt="AI Diagnosis" />
+                    <div class="feat-body"><div class="feat-icon">&#129504;</div><h3>AI-Assisted Brain Diagnosis</h3><p>Deep learning models trained on millions of neuroimaging datasets detect anomalies including early-stage tumors, lesions, and vascular irregularities with clinical-grade precision.</p></div>
+                </div>
+                <div class="feat-card fade-up" style="transition-delay:.1s">
+                    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSQDuiC77Je5yApAn06-2iK6hsCnrewhJKeXQ&s" alt="Patient Experience" />
+                    <div class="feat-body"><div class="feat-icon">&#x1F4AB;</div><h3>Seamless Patient Experience</h3><p>Comfortable, patient-friendly scanning sessions with real-time status updates, minimal wait times, and a stress-free clinical environment designed around you.</p></div>
+                </div>
+                <div class="feat-card fade-up" style="transition-delay:.2s">
+                    <img src="https://media.licdn.com/dms/image/v2/D5612AQHaYWxN_zAVDQ/article-cover_image-shrink_600_2000/B56Zvw1HfhHcAQ-/0/1769272019300?e=2147483647&v=beta&t=Ho9NINJRZ4f0m-gu6bduL5s1abl2AGI2R5chmQLZmmQ" alt="Expert Radiologists" />
+                    <div class="feat-body"><div class="feat-icon">&#128300;</div><h3>Expert Neuroradiologists</h3><p>Every AI-flagged finding is reviewed by board-certified neuroradiologists, ensuring the highest standards of diagnostic accuracy and clinical accountability.</p></div>
+                </div>
+                <div class="feat-card fade-up" style="transition-delay:.3s">
+                    <img src="https://geekymedics.com/wp-content/uploads/2025/01/edh-1-highlight.png" alt="Imaging Technology" />
+                    <div class="feat-body"><div class="feat-icon">&#9889;</div><h3>Advanced Imaging Technology</h3><p>7-Tesla MRI systems paired with our proprietary AI pipeline deliver sub-millimeter resolution critical for detecting the smallest structural abnormalities in the brain.</p></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- PROCESS -->
+    <section>
+        <div class="sec-header fade-up">
+            <div class="sec-tag">The Process</div>
+            <h2>From Scan to Insight in 4 Steps</h2>
+            <p>A streamlined end-to-end workflow designed around both clinician efficiency and patient comfort.</p>
+        </div>
+        <div class="steps-wrap">
+            <div class="steps-row">
+                <div class="step fade-up"><div class="step-circle">01</div><h4>Schedule</h4><p>Book your brain MRI online or via your referring physician in just a few minutes.</p></div>
+                <div class="step fade-up" style="transition-delay:.1s"><div class="step-circle">02</div><h4>Scan</h4><p>Undergo a safe, non-invasive MRI session using our 7-Tesla imaging equipment.</p></div>
+                <div class="step fade-up" style="transition-delay:.2s"><div class="step-circle">03</div><h4>AI Analysis</h4><p>Our deep learning engine processes raw data and highlights all regions of clinical interest.</p></div>
+                <div class="step fade-up" style="transition-delay:.3s"><div class="step-circle">04</div><h4>Report</h4><p>Receive a verified, radiologist-approved diagnostic report within 24 hours.</p></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- TECHNOLOGY -->
+    <section id="technology" class="tech-section">
+        <div class="sec-header fade-up">
+            <div class="sec-tag">Under the Hood</div>
+            <h2>The Technology Behind S-SCAN</h2>
+            <p>Purpose-built from the ground up for neurological imaging, not adapted from generic AI tools.</p>
+        </div>
+        <div class="tech-grid">
+            <div class="tech-visual fade-up">
+                <img src="https://miro.medium.com/v2/resize:fit:1100/format:webp/1*LTkD8ATK9KTyz2cJuKRxUg.jpeg" alt="AI Brain Technology" />
+                <div class="tech-overlay"></div>
+                <div class="tech-overlay-text">
+                    <h4>Real-Time Anomaly Detection</h4>
+                    <p>AI highlights regions of interest within seconds of scan completion</p>
+                </div>
+            </div>
+            <div class="tech-content fade-up" style="transition-delay:.15s">
+                <div class="sec-tag" style="text-align:left;display:block">Specifications</div>
+                <h2>Clinical-Grade AI, Built for the Brain</h2>
+                <p>S-SCAN's neural network was trained on over 2 million annotated brain MRI scans across diverse demographics, pathologies, and scanner hardware, ensuring robust generalization in real-world clinical settings.</p>
+                <div class="tech-specs">
+                    <div class="spec-row"><div class="spec-icon">&#128301;</div><div class="spec-text"><h5>7-Tesla MRI Hardware</h5><p>Sub-millimeter resolution for detecting micro-lesions invisible to standard 1.5T scanners</p></div></div>
+                    <div class="spec-row"><div class="spec-icon">&#129302;</div><div class="spec-text"><h5>Transformer-Based Deep Learning</h5><p>Vision transformer architecture fine-tuned on 2M+ annotated neurological scans</p></div></div>
+                    <div class="spec-row"><div class="spec-icon">&#128274;</div><div class="spec-text"><h5>HIPAA &amp; GDPR Compliant</h5><p>End-to-end encryption, on-premise deployment options, full audit logging</p></div></div>
+                    <div class="spec-row"><div class="spec-icon">&#128225;</div><div class="spec-text"><h5>EHR Integration Ready</h5><p>Native FHIR / HL7 support for seamless integration with Epic, Cerner, and others</p></div></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- TEAM -->
+    <!-- COLLABORATION -->
+    <section id="team">
+        <div class="sec-header fade-up">
+            <div class="sec-tag">Our Partners</div>
+            <h2>The Collaboration Behind S-SCAN</h2>
+            <p>S-SCAN is powered by a strategic partnership between leading healthcare experts and academic innovators, combining clinical excellence with cutting-edge AI research.</p>
+        </div>
+        <div class="team-grid">
+            <!-- CARE Foundation Card -->
+            <div class="team-card fade-up">
+                <img class="team-avatar" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSEs8SrZpKEx56gY3Sox_hsd42Nvr6cH0Lqlw&s" alt="CARE Foundation / CARE Hospitals" />
+                <div class="team-body">
+                    <h4>CARE Foundation</h4>
+                    <div class="team-role">Hyderabad, Telangana</div>
+                    <p>CARE Foundation has been promoted by a group of medical scientists and technocrats with the stated mission of making advanced comprehensive healthcare affordable and accessible to all. Founded in 1997 with its head office in Hyderabad, it is a non-profit organization registered under the Andhra Pradesh (Telangana Area) Society Registration Act. The Foundation is run by a board of eminent medical professionals and scientists dedicated to making tertiary healthcare available to the general masses of India.</p>
+                </div>
+            </div>
+
+            <!-- Stanley College Card -->
+            <div class="team-card fade-up" style="transition-delay:.1s">
+                <img class="team-avatar" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTOzoFlKR7n1C9Wry4rTwxdClLHnr8-RdPvxQ&s" alt="Stanley College of Engineering and Technology for Women" />
+                <div class="team-body">
+                    <h4>Stanley College of Engineering and Technology for Women</h4>
+                    <div class="team-role">Hyderabad, Telangana</div>
+                    <p>Collaborative framework between CARE Foundation and Stanley College of Engineering for mutual cooperation in the application of Artificial Intelligence (AI) and Machine Learning (ML) technologies on clinical and imaging data for disease prediction and progression analysis.</p>
+                    <ul style="font-size:13px; color:var(--muted); line-height:1.65; margin-top:12px; list-style-type:disc; padding-left:20px;">
+                        <li>Enable students and faculty of Stanley to participate in real-world, healthcare-centric research.</li>
+                        <li>Leverage the domain expertise and medical datasets of CARE Foundation to foster impactful model development.</li>
+                        <li>Contribute to the advancement of medical AI applications with meaningful academic and clinical outcomes.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- TESTIMONIALS -->
+    <section id="testimonials" class="testimonials-section">
+        <div class="sec-header fade-up">
+            <div class="sec-tag">What Clinicians Say</div>
+            <h2>Trusted by Leading Medical Professionals</h2>
+            <p>From major hospital networks to private neurology practices — hear from the clinicians who rely on S-SCAN every day.</p>
+        </div>
+        <div class="testi-grid">
+            <div class="testi-card fade-up">
+                <div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+                <blockquote>"S-SCAN flagged a Grade II glioma that earlier scans had missed entirely. The sub-millimeter resolution made all the difference. This platform is genuinely saving lives."</blockquote>
+            </div>
+            <div class="testi-card fade-up" style="transition-delay:.1s">
+                <div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+                <blockquote>"We integrated S-SCAN with our Epic EHR in under a week. Turnaround time dropped from 3 days to same-day for urgent cases. It has completely transformed our radiology workflow."</blockquote>
+
+            </div>
+            <div class="testi-card fade-up" style="transition-delay:.2s">
+                <div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+                <blockquote>"The AI confidence scores and annotated heatmaps are an incredible teaching tool. S-SCAN is elevating the standard of neuroimaging education across our entire institution."</blockquote>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ -->
+    <section id="faq">
+        <div class="sec-header fade-up">
+            <div class="sec-tag">FAQ</div>
+            <h2>Frequently Asked Questions</h2>
+            <p>Everything you need to know before booking your brain MRI with S-SCAN.</p>
+        </div>
+        <div class="faq-outer">
+            <div class="faq-wrap">
+                <div class="faq-item open">
+                    <button class="faq-q" onclick="toggleFaq(this)">How accurate is the AI diagnosis? <span class="faq-arrow">+</span></button>
+                    <div class="faq-a"><p>Our AI achieves 98.4% diagnostic accuracy on a validation dataset of 500,000+ brain MRI scans, covering gliomas, meningiomas, white matter disease, and vascular malformations. Every AI result is independently reviewed by a board-certified neuroradiologist before the final report is issued.</p></div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-q" onclick="toggleFaq(this)">How long does a scan and report take? <span class="faq-arrow">+</span></button>
+                    <div class="faq-a"><p>A typical brain MRI session takes 30-45 minutes. Our AI processes scan data within minutes of acquisition. The final radiologist-verified report is delivered within 24 hours for standard requests, and within 4-6 hours for urgent clinical cases.</p></div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-q" onclick="toggleFaq(this)">Is MRI safe? Are there side effects? <span class="faq-arrow">+</span></button>
+                    <div class="faq-a"><p>MRI is a non-invasive, radiation-free imaging technique using magnetic fields and radio waves — one of the safest diagnostic methods available. There are no known side effects. Patients with certain metal implants should inform their physician before scheduling.</p></div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-q" onclick="toggleFaq(this)">How does S-SCAN integrate with hospital systems? <span class="faq-arrow">+</span></button>
+                    <div class="faq-a"><p>S-SCAN supports native FHIR R4 and HL7 v2.x interfaces, enabling direct integration with Epic, Cerner, Meditech, and Allscripts. Our team provides full onboarding support and typical integration takes 5-10 business days.</p></div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-q" onclick="toggleFaq(this)">Is patient data secure and HIPAA compliant? <span class="faq-arrow">+</span></button>
+                    <div class="faq-a"><p>All patient data is encrypted in transit (TLS 1.3) and at rest (AES-256). S-SCAN is fully HIPAA and GDPR compliant with optional on-premise deployment. We conduct quarterly third-party security audits and maintain a full access audit log.</p></div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-q" onclick="toggleFaq(this)">What brain conditions can S-SCAN detect? <span class="faq-arrow">+</span></button>
+                    <div class="faq-a"><p>S-SCAN detects a wide range of neurological conditions: brain tumors (primary and metastatic), stroke and ischemic lesions, multiple sclerosis plaques, cerebral aneurysms, hydrocephalus, Alzheimer's biomarkers, traumatic brain injury, and white matter abnormalities.</p></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CONTACT -->
+    <section id="contact" class="contact-section">
+        <h2>Ready to Get Started?</h2>
+        <p>Book a brain MRI or enquire about clinical partnerships and EHR integration.</p>
+        <div class="contact-chips">
+            <a href="tel:+11234567890" class="chip">&#128222; (123) 456-7890</a>
+            <a href="mailto:info@s-scan.ai" class="chip">&#9993; info@s-scan.ai</a>
+            <a href="#" class="chip">&#128205; New York, NY</a>
+            <a href="#" class="chip chip-cta" id="contactUploadBtn">&#128193; Upload DICOM Scan</a>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="foot-logo"><span class="s">S</span>-SCAN.</div>
+        <div class="foot-links">
+            <a href="#">Privacy Policy</a>
+            <a href="#">Terms of Service</a>
+            <a href="#">HIPAA Notice</a>
+        </div>
+        <p>&#169; 2025 S-SCAN Inc. All rights reserved. FDA-cleared AI diagnostic platform.</p>
+    </footer>
+
+    <script>
+        // ── SMOOTH SCROLL ──
+        const NAV_HEIGHT = document.querySelector('nav').offsetHeight;
+        function scrollToSection(id) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - NAV_HEIGHT - 8, behavior: 'smooth' });
+        }
+        document.querySelectorAll('[data-scroll]').forEach(function (link) {
+            link.addEventListener('click', function (e) { e.preventDefault(); scrollToSection(this.dataset.scroll); });
+        });
+
+        // ── ACTIVE NAV ──
+        const sections = ['home', 'services', 'technology', 'team', 'testimonials', 'faq', 'contact'];
+        const navLinks = document.querySelectorAll('[data-scroll]');
+        function setActive() {
+            let current = 'home';
+            sections.forEach(function (id) {
+                const el = document.getElementById(id);
+                if (el && window.scrollY >= el.offsetTop - NAV_HEIGHT - 40) current = id;
+            });
+            navLinks.forEach(function (link) {
+                link.classList.remove('active');
+                if (link.dataset.scroll === current) link.classList.add('active');
+            });
+        }
+        window.addEventListener('scroll', setActive, { passive: true });
+        setActive();
+
+        // ── FAQ ──
+        function toggleFaq(btn) {
+            var item = btn.closest('.faq-item'), isOpen = item.classList.contains('open');
+            document.querySelectorAll('.faq-item').forEach(function (i) { i.classList.remove('open'); });
+            if (!isOpen) item.classList.add('open');
+        }
+
+        // ── FADE-UP ──
+        var observer = new IntersectionObserver(function (entries) {
+            entries.forEach(function (e) { if (e.isIntersecting) e.target.classList.add('visible'); });
+        }, { threshold: 0.12 });
+        document.querySelectorAll('.fade-up').forEach(function (el) { observer.observe(el); });
+
+        // ════════════════════════════════
+        // FOLDER UPLOAD LOGIC (modified)
+        // ════════════════════════════════
+        function openModal() { document.getElementById('modalOverlay').classList.add('show'); }
+        function closeModal() {
+            document.getElementById('modalOverlay').classList.remove('show');
+            setTimeout(resetUpload, 350);
+        }
+        function resetUpload() {
+            document.getElementById('uploadStatus').innerHTML = '';
+            document.getElementById('fileList').innerHTML = '';
+            document.getElementById('uploadBox').classList.remove('has-files');
+            var btn = document.getElementById('proceedBtn');
+            btn.style.display = 'none';
+            btn.disabled = false;
+            btn.classList.remove('done');
+            btn.innerHTML = '⬆️ Upload & Analyse';
+            document.getElementById('folderInput').value = '';
+        }
+
+        document.getElementById('bookScanBtn').addEventListener('click', openModal);
+        document.getElementById('contactUploadBtn')?.addEventListener('click', function (e) { e.preventDefault(); openModal(); });
+
+        document.getElementById('modalClose').addEventListener('click', closeModal);
+        document.getElementById('cancelBtn').addEventListener('click', closeModal);
+        document.getElementById('modalOverlay').addEventListener('click', function (e) {
+            if (e.target === this) closeModal();
+        });
+        document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeModal(); });
+
+        document.getElementById('uploadBox').addEventListener('click', function () {
+            document.getElementById('folderInput').click();
+        });
+
+        var box = document.getElementById('uploadBox');
+        box.addEventListener('dragover', function (e) { e.preventDefault(); this.classList.add('drag-over'); });
+        box.addEventListener('dragleave', function () { this.classList.remove('drag-over'); });
+        box.addEventListener('drop', function (e) {
+            e.preventDefault(); this.classList.remove('drag-over');
+            processFiles(e.dataTransfer.files);
+        });
+
+        document.getElementById('folderInput').addEventListener('change', function () {
+            processFiles(this.files);
+        });
+
+        function processFiles(files) {
+            var validFiles = [], rejected = [];
+            for (var i = 0; i < files.length; i++) {
+                var f = files[i];
+                // Accept everything inside the folder — no extension filtering
+                validFiles.push(f);
+            }
+            
+            // Store files globally for the proceed button
+            selectedFilesGlobal = validFiles;
+
+            var statusEl = document.getElementById('uploadStatus');
+            var listEl = document.getElementById('fileList');
+            listEl.innerHTML = '';
+
+            if (validFiles.length === 0) {
+                statusEl.innerHTML = '<div class="status-error">✗ No files found in the selected folder.</div>';
+                box.classList.remove('has-files');
+                document.getElementById('proceedBtn').style.display = 'none';
+                return;
+            }
+
+            box.classList.add('has-files');
+
+            var shown = Math.min(validFiles.length, 6);
+            for (var j = 0; j < shown; j++) {
+                var li = document.createElement('div');
+                li.className = 'file-item';
+                li.innerHTML = '<span class="file-icon">📄</span>' +
+                    '<span class="file-name">' + validFiles[j].name + '</span>' +
+                    '<span class="file-size">' + (validFiles[j].size / 1024).toFixed(1) + ' KB</span>';
+                listEl.appendChild(li);
+            }
+            if (validFiles.length > 6) {
+                var more = document.createElement('div');
+                more.className = 'file-more';
+                more.textContent = '+ ' + (validFiles.length - 6) + ' more file' + (validFiles.length - 6 > 1 ? 's' : '');
+                listEl.appendChild(more);
+            }
+
+            var msg = '<div class="status-ok">✔ ' + validFiles.length + ' file' + (validFiles.length > 1 ? 's' : '') + ' detected. Processing...</div>';
+            if (rejected.length > 0) {
+                msg += '<div class="status-warn">⚠ ' + rejected.length + ' file' + (rejected.length > 1 ? 's were' : ' was') + ' skipped.</div>';
+            }
+            statusEl.innerHTML = msg;
+
+            // Hide the proceed button since we're auto-processing
+            document.getElementById('proceedBtn').style.display = 'none';
+            
+            // Automatically process and redirect
+            autoProcessAndRedirect(validFiles);
+        }
+        
+        // Auto-process files and redirect to analyze page
+        async function autoProcessAndRedirect(files) {
+            try {
+                var statusEl = document.getElementById('uploadStatus');
+                
+                // Filter for DICOM files (by extension)
+                var dicomFiles = [];
+                for (var i = 0; i < files.length; i++) {
+                    var file = files[i];
+                    var ext = file.name.toLowerCase().split('.').pop();
+                    if (ext === 'dcm' || ext === 'dicom' || file.name.match(/^\d+-\d+$/)) {
+                        dicomFiles.push(file);
+                    }
+                }
+                
+                if (dicomFiles.length === 0) {
+                    // Fallback: try to find any image file
+                    for (var i = 0; i < files.length; i++) {
+                        var file = files[i];
+                        if (file.type.startsWith('image/')) {
+                            dicomFiles.push(file);
+                            break;
+                        }
+                    }
+                }
+                
+                if (dicomFiles.length === 0) {
+                    statusEl.innerHTML =
+                        '<div class="status-error">✗ No DICOM or image files found. Please select a folder containing DICOM files.</div>';
+                    return;
+                }
+                
+                console.log('Found ' + dicomFiles.length + ' DICOM files');
+                statusEl.innerHTML = '<div class="status-ok">Processing ' + dicomFiles.length + ' DICOM files...</div>';
+                
+                // Store files in a global variable that will persist during navigation
+                window.uploadedDicomFiles = dicomFiles;
+                
+                // Store minimal patient data in sessionStorage
+                var patientData = {
+                    patientName: 'Patient',
+                    patientAge: '-',
+                    patientGender: '-',
+                    scanType: 'Brain MRI (DICOM Sequence)',
+                    position: '-',
+                    fileCount: dicomFiles.length,
+                    prediction: 'Processing...',
+                    diagnosis: 'AI analysis in progress...'
+                };
+                sessionStorage.setItem('patientData', JSON.stringify(patientData));
+                
+                // Show success message
+                statusEl.innerHTML =
+                    '<div class="status-ok">✔ ' + dicomFiles.length + ' files ready! Redirecting to analysis...</div>';
+                
+                // Store files in IndexedDB for persistence
+                await storeDicomFilesInIndexedDB(dicomFiles);
+                
+                // Redirect to analyze.html
+                setTimeout(function() {
+                    window.location.href = 'analyze.html';
+                }, 500);
+                
+            } catch (error) {
+                console.error('Error processing files:', error);
+                document.getElementById('uploadStatus').innerHTML =
+                    '<div class="status-error">✗ Error processing files: ' + error.message + '</div>';
+            }
+        }
+        
+        // Store DICOM files in IndexedDB
+        async function storeDicomFilesInIndexedDB(files) {
+    // File objects are not serialisable — read each file into an ArrayBuffer first
+    var serialisable = [];
+    for (var i = 0; i < files.length; i++) {
+        var buf = await files[i].arrayBuffer();
+        serialisable.push({ name: files[i].name, buffer: buf });
+    }
+
+    return new Promise(function(resolve, reject) {
+        var request = indexedDB.open('DicomStorage', 1);
+
+        request.onerror = function() { reject(new Error('Failed to open IndexedDB')); };
+
+        request.onupgradeneeded = function(event) {
+            var db = event.target.result;
+            if (!db.objectStoreNames.contains('files')) {
+                db.createObjectStore('files', { keyPath: 'id' });
+            }
+        };
+
+        request.onsuccess = function(event) {
+            var db = event.target.result;
+            var transaction = db.transaction(['files'], 'readwrite');
+            var objectStore = transaction.objectStore('files');
+
+            objectStore.clear();
+            // Store serialisable objects (ArrayBuffer + name) not File objects
+            objectStore.put({ id: 'dicomFiles', files: serialisable });
+
+            transaction.oncomplete = function() { db.close(); resolve(); };
+            transaction.onerror   = function() { db.close(); reject(new Error('Failed to store files')); };
+        };
+    });
+}
+        
+
+        var selectedFilesGlobal = [];
+
+        document.getElementById('proceedBtn').addEventListener('click', async function () {
+            this.innerHTML = '<span class="spin">↻</span> Processing...';
+            this.disabled = true;
+            var self = this;
+            
+            // Filter for DICOM files (by extension)
+            var dicomFiles = [];
+            for (var i = 0; i < selectedFilesGlobal.length; i++) {
+                var file = selectedFilesGlobal[i];
+                var ext = file.name.toLowerCase().split('.').pop();
+                if (ext === 'dcm' || ext === 'dicom' || file.name.match(/^\d+-\d+$/)) {
+                    dicomFiles.push(file);
+                }
+            }
+            
+            if (dicomFiles.length === 0) {
+                // Fallback: try to find any image file
+                for (var i = 0; i < selectedFilesGlobal.length; i++) {
+                    var file = selectedFilesGlobal[i];
+                    if (file.type.startsWith('image/')) {
+                        dicomFiles.push(file);
+                        break;
+                    }
+                }
+            }
+            
+            if (dicomFiles.length === 0) {
+                document.getElementById('uploadStatus').innerHTML =
+                    '<div class="status-error">✗ No DICOM or image files found. Please select a folder containing DICOM files (e.g., 1-001.dcm, 1-002.dcm, etc.).</div>';
+                self.innerHTML = '⬆️ Upload & Analyse';
+                self.disabled = false;
+                return;
+            }
+            
+            console.log('Found ' + dicomFiles.length + ' DICOM files');
+            
+            try {
+                // Convert files to data URLs for storage in sessionStorage
+                var filesData = [];
+                var processedCount = 0;
+                
+                for (var i = 0; i < dicomFiles.length; i++) {
+                    var file = dicomFiles[i];
+                    var reader = new FileReader();
+                    
+                    await new Promise(function(resolve, reject) {
+                        reader.onload = function(e) {
+                            filesData.push({
+                                name: file.name,
+                                type: file.type || 'application/dicom',
+                                dataUrl: e.target.result
+                            });
+                            processedCount++;
+                            document.getElementById('uploadStatus').innerHTML =
+                                '<div class="status-ok">Processing DICOM files: ' + processedCount + '/' + dicomFiles.length + '</div>';
+                            resolve();
+                        };
+                        reader.onerror = reject;
+                        reader.readAsDataURL(file);
+                    });
+                }
+                
+                // Store DICOM files data in sessionStorage
+                sessionStorage.setItem('dicomFiles', JSON.stringify(filesData));
+                
+                // Store patient data
+                var patientData = {
+                    patientName: 'Patient',
+                    patientAge: '-',
+                    patientGender: '-',
+                    scanType: 'Brain MRI (DICOM Sequence)',
+                    position: '-',
+                    prediction: 'Processing...',
+                    diagnosis: 'AI analysis in progress...'
+                };
+                sessionStorage.setItem('patientData', JSON.stringify(patientData));
+                
+                // Show success message
+                document.getElementById('uploadStatus').innerHTML =
+                    '<div class="status-ok">✔ ' + dicomFiles.length + ' DICOM files loaded! Redirecting to analysis...</div>';
+                self.innerHTML = '✔ Upload Successful';
+                self.classList.add('done');
+                
+                // Redirect to analyze.html
+                setTimeout(function() {
+                    window.location.href = 'analyze.html';
+                }, 1000);
+                
+            } catch (error) {
+                console.error('Error processing files:', error);
+                document.getElementById('uploadStatus').innerHTML =
+                    '<div class="status-error">✗ Error processing files: ' + error.message + '</div>';
+                self.innerHTML = '⬆️ Upload & Analyse';
+                self.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

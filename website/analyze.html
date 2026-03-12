@@ -1,0 +1,1306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S-SCAN DICOM Viewer</title>
+    <script src="https://unpkg.com/dicom-parser@1.8.13/dist/dicomParser.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1a1a1a;
+            color: #fff;
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+
+        .header h1 {
+            font-size: 24px;
+        }
+
+        .header .back-btn {
+            background: rgba(255,255,255,0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .main-container {
+            display: flex;
+            height: calc(100vh - 60px);
+            overflow: hidden;
+        }
+
+        .viewer-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #2a2a2a;
+            overflow: hidden;
+        }
+
+        .images-grid {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 2px;
+            background: #1a1a1a;
+            padding: 10px;
+            overflow: auto;
+            min-height: 0;
+        }
+
+        .image-panel {
+            background: #000;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #333;
+            min-height: 250px;
+            overflow: hidden;
+        }
+
+        .image-panel canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            image-rendering: pixelated;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: crisp-edges;
+        }
+
+        .image-label {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.8);
+            padding: 5px 12px;
+            border-radius: 5px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #fff;
+            z-index: 10;
+            border: 1px solid #667eea;
+        }
+
+        .image-panel.loading {
+            background: linear-gradient(45deg, #1a1a1a 25%, #2a2a2a 25%, #2a2a2a 50%, #1a1a1a 50%, #1a1a1a 75%, #2a2a2a 75%, #2a2a2a);
+            background-size: 40px 40px;
+            animation: loading-stripes 1s linear infinite;
+        }
+
+        @keyframes loading-stripes {
+            0% {
+                background-position: 0 0;
+            }
+            100% {
+                background-position: 40px 40px;
+            }
+        }
+
+        .controls-bar {
+            background: #333;
+            padding: 20px;
+            border-top: 2px solid #444;
+            flex-shrink: 0;
+            overflow-y: auto;
+            max-height: 200px;
+        }
+
+        .slider-container {
+            margin-bottom: 15px;
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: #ccc;
+        }
+
+        .slider {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: #555;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+        }
+
+        .slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+            border: none;
+        }
+
+        .playback-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .control-btn {
+            background: #667eea;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .control-btn:hover {
+            background: #5568d3;
+        }
+
+        .control-btn:disabled {
+            background: #555;
+            cursor: not-allowed;
+        }
+
+        .sidebar {
+            width: 320px;
+            background: #2a2a2a;
+            border-left: 2px solid #444;
+            overflow-y: auto;
+            padding: 20px;
+            flex-shrink: 0;
+        }
+
+        .info-section {
+            background: #333;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .info-section h3 {
+            font-size: 16px;
+            margin-bottom: 10px;
+            color: #667eea;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #444;
+            font-size: 14px;
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            color: #999;
+        }
+
+        .info-value {
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .triage-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .triage-high {
+            background: #dc3545;
+            color: white;
+        }
+
+        .triage-normal {
+            background: #28a745;
+            color: white;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .loading-overlay.active {
+            display: flex;
+        }
+
+        .loading-content {
+            text-align: center;
+        }
+
+        .spinner {
+            border: 4px solid rgba(255,255,255,0.3);
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .progress-bar {
+            width: 300px;
+            height: 8px;
+            background: #333;
+            border-radius: 5px;
+            overflow: hidden;
+            margin: 20px auto;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        .error-message {
+            background: #dc3545;
+            color: white;
+            padding: 15px;
+            margin: 20px;
+            border-radius: 8px;
+        }
+
+        /* Scrollbar styling */
+        .images-grid::-webkit-scrollbar,
+        .sidebar::-webkit-scrollbar,
+        .controls-bar::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        .images-grid::-webkit-scrollbar-track,
+        .sidebar::-webkit-scrollbar-track,
+        .controls-bar::-webkit-scrollbar-track {
+            background: #1a1a1a;
+        }
+
+        .images-grid::-webkit-scrollbar-thumb,
+        .sidebar::-webkit-scrollbar-thumb,
+        .controls-bar::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 4px;
+        }
+
+        .images-grid::-webkit-scrollbar-thumb:hover,
+        .sidebar::-webkit-scrollbar-thumb:hover,
+        .controls-bar::-webkit-scrollbar-thumb:hover {
+            background: #5568d3;
+        }
+
+        /* Responsive design */
+        @media (max-width: 1200px) {
+            .sidebar {
+                width: 280px;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .main-container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                max-height: 300px;
+                border-left: none;
+                border-top: 2px solid #444;
+            }
+
+            .images-grid {
+                min-height: 400px;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .control-btn {
+                padding: 8px 12px;
+                font-size: 12px;
+            }
+
+            .header h1 {
+                font-size: 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <h2 id="loadingText">Loading AI Models...</h2>
+            <p id="loadingProgress">Initializing...</p>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="header">
+        <h1>🧠 S-SCAN DICOM Viewer</h1>
+        <button class="back-btn" onclick="goBack()">← Back</button>
+    </div>
+
+    <div class="main-container">
+        <div class="viewer-section">
+            <div class="images-grid">
+                <div class="image-panel">
+                    <canvas id="originalCanvas"></canvas>
+                    <div class="image-label">Original (Brain Window)</div>
+                </div>
+                <div class="image-panel">
+                    <canvas id="drrnCanvas"></canvas>
+                    <div class="image-label">Skull Stripped</div>
+                </div>
+                <div class="image-panel">
+                    <canvas id="lapsrnCanvas"></canvas>
+                    <div class="image-label">Brain Parenchyma</div>
+                </div>
+                <div class="image-panel">
+                    <canvas id="segmentationCanvas"></canvas>
+                    <div class="image-label">Bleed Detection</div>
+                </div>
+            </div>
+
+            <div class="controls-bar">
+                <div class="slider-container">
+                    <div class="slider-label">
+                        <span>Slice: <span id="currentSlice">0</span> / <span id="totalSlices">0</span></span>
+                        <span id="sliceFileName">-</span>
+                    </div>
+                    <input type="range" class="slider" id="sliceSlider" min="0" max="0" value="0">
+                </div>
+                <div class="playback-controls">
+                    <button class="control-btn" id="firstBtn" onclick="goToFirst()">⏮ First</button>
+                    <button class="control-btn" id="prevBtn" onclick="previousSlice()">◀ Previous</button>
+                    <button class="control-btn" id="playBtn" onclick="togglePlay()">▶ Play</button>
+                    <button class="control-btn" id="nextBtn" onclick="nextSlice()">Next ▶</button>
+                    <button class="control-btn" id="lastBtn" onclick="goToLast()">Last ⏭</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="sidebar">
+            <div class="info-section">
+                <h3>Current Slice Info</h3>
+                <div class="info-row">
+                    <span class="info-label">File Name:</span>
+                    <span class="info-value" id="infoFileName">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Slice Number:</span>
+                    <span class="info-value" id="infoSliceNum">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Largest Bleed Region:</span>
+                    <span class="info-value" id="infoScore">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Priority:</span>
+                    <span class="info-value" id="infoPriority">-</span>
+                </div>
+            </div>
+
+            <div class="info-section">
+                <h3>Series Summary</h3>
+                <div class="info-row">
+                    <span class="info-label">Total Slices:</span>
+                    <span class="info-value" id="summaryTotal">0</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Processed:</span>
+                    <span class="info-value" id="summaryProcessed">0</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">High Priority:</span>
+                    <span class="info-value" id="summaryHigh">0</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Normal Priority:</span>
+                    <span class="info-value" id="summaryNormal">0</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Total Bleed Area:</span>
+                    <span class="info-value" id="summaryAvg">-</span>
+                </div>
+            </div>
+
+            <div id="errorContainer"></div>
+        </div>
+    </div>
+
+    <script>
+
+        // No external decoder library — uses native browser image decoding
+        
+        let drrnSession, lapsrnSession, unetSession, triageSession;
+        let modelsLoaded = false;
+        let allResults = [];
+        let currentSliceIndex = 0;
+        let isPlaying = false;
+        let playInterval = null;
+
+        function showLoading(show, text = '', progress = '') {
+            const overlay = document.getElementById('loadingOverlay');
+            if (show) {
+                overlay.classList.add('active');
+                document.getElementById('loadingText').textContent = text;
+                document.getElementById('loadingProgress').textContent = progress;
+            } else {
+                overlay.classList.remove('active');
+            }
+        }
+
+        function updateProgress(percent) {
+            document.getElementById('progressFill').style.width = percent + '%';
+        }
+
+        async function loadModels() {
+            try {
+                if (window.location.protocol === 'file:') {
+                    showError('Please run from a web server, not file://');
+                    return;
+                }
+
+                showLoading(true, 'Initializing DICOM Pipeline...', 'Setting up decoder...');
+                updateProgress(50);
+
+                updateProgress(100);
+                console.log('✅ Pipeline ready');
+                modelsLoaded = true;
+                showLoading(false);
+            } catch (error) {
+                showLoading(false);
+                showError('Error initializing decoder: ' + error.message);
+            }
+        }
+
+        function showError(message) {
+            document.getElementById('errorContainer').innerHTML = 
+                '<div class="error-message">' + message + '</div>';
+        }
+
+        function loadDicomFilesFromIndexedDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open('DicomStorage', 1);
+
+                // Create the object store if this is the first open
+                request.onupgradeneeded = (event) => {
+                    const db = event.target.result;
+                    if (!db.objectStoreNames.contains('files')) {
+                        db.createObjectStore('files', { keyPath: 'id' });
+                    }
+                };
+
+                request.onerror = () => reject(new Error('Failed to open IndexedDB'));
+
+                request.onsuccess = (event) => {
+                    const db = event.target.result;
+
+                    // Guard: store may not exist on a fresh open
+                    if (!db.objectStoreNames.contains('files')) {
+                        db.close();
+                        reject(new Error('No DICOM files found — please upload files first'));
+                        return;
+                    }
+
+                    const transaction = db.transaction(['files'], 'readonly');
+                    const objectStore = transaction.objectStore('files');
+                    const getRequest  = objectStore.get('dicomFiles');
+
+                    getRequest.onsuccess = () => {
+                        db.close();
+                        if (getRequest.result && getRequest.result.files && getRequest.result.files.length > 0) {
+                            resolve(getRequest.result.files);
+                        } else {
+                            reject(new Error('No DICOM files found — please upload files first'));
+                        }
+                    };
+                    getRequest.onerror = () => {
+                        db.close();
+                        reject(new Error('Failed to retrieve files from IndexedDB'));
+                    };
+                };
+            });
+        }
+
+        // ── HU Thresholds (matching notebook pipeline) ────────────────────────────
+        const HU_THRESHOLDS = {
+            air:   [-Infinity, -900],
+            water: [-10,        10],
+            brain: [ 20,        40],
+            bleed: [ 50,        90],
+        };
+
+        // ── Brain window (WW=80, WL=40) — standard CT brain window ───────────────
+        function applyBrainWindow(hu, ww = 80, wl = 40) {
+            const lo = wl - ww / 2;
+            const hi = wl + ww / 2;
+            return Math.max(0, Math.min(1, (hu - lo) / (hi - lo)));
+        }
+
+        // ── Remap sentinel values (≤ -2000 HU → -1000 air) — FIX 1 ─────────────
+        function preprocessHU(huArray) {
+            for (let i = 0; i < huArray.length; i++) {
+                if (huArray[i] <= -2000) huArray[i] = -1000;
+            }
+            return huArray;
+        }
+        // ── Skull removal — border-connected flood-fill (preserves bleeds) ────────
+        // Only removes bone that is physically connected to the image border.
+        // Bleeds (50–90 HU) inside the brain are never touched.
+        function removeSkull(huArray, rows, cols) {
+            const n = rows * cols;
+
+            // Step 1: mark bone candidates (HU > 150)
+            const boneMask = new Uint8Array(n);
+            for (let i = 0; i < n; i++) {
+                boneMask[i] = huArray[i] > 150 ? 1 : 0;
+            }
+
+            // Step 2: flood-fill from all 4 borders to find skull (border-connected bone)
+            const skullMask = new Uint8Array(n);
+            const queue = [];
+
+            const enqueue = (r, c) => {
+                const idx = r * cols + c;
+                if (boneMask[idx] && !skullMask[idx]) {
+                    skullMask[idx] = 1;
+                    queue.push(idx);
+                }
+            };
+
+            // Seed from all border pixels that are bone
+            for (let c = 0; c < cols; c++) { enqueue(0, c); enqueue(rows-1, c); }
+            for (let r = 0; r < rows; r++) { enqueue(r, 0); enqueue(r, cols-1); }
+
+            // BFS flood fill
+            let head = 0;
+            while (head < queue.length) {
+                const idx = queue[head++];
+                const r = Math.floor(idx / cols), c = idx % cols;
+                const neighbours = [
+                    [r-1,c],[r+1,c],[r,c-1],[r,c+1]
+                ];
+                for (const [nr, nc] of neighbours) {
+                    if (nr >= 0 && nr < rows && nc >= 0 && nc < cols) {
+                        enqueue(nr, nc);
+                    }
+                }
+            }
+
+            // Step 3: also zero out air (HU < -200) — background outside head
+            // Keep everything else including haemorrhage (50–90 HU)
+            const stripped = new Float32Array(n);
+            const airValue = -1000;
+            for (let i = 0; i < n; i++) {
+                if (skullMask[i] || huArray[i] < -200) {
+                    stripped[i] = airValue;
+                } else {
+                    stripped[i] = huArray[i];
+                }
+            }
+            return stripped;
+        }
+
+        // ── calibrate_bleed_threshold — Otsu's method on 20–100 HU histogram ────────
+        function calibrateBleedThreshold(huArray) {
+            // Build histogram of brain-range HU values (20–100)
+            const HU_MIN = 20, HU_MAX = 100, BINS = 80;
+            const hist = new Float32Array(BINS);
+            let total = 0;
+            for (let i = 0; i < huArray.length; i++) {
+                const v = huArray[i];
+                if (v >= HU_MIN && v <= HU_MAX) {
+                    const bin = Math.min(BINS - 1, Math.floor((v - HU_MIN) / (HU_MAX - HU_MIN) * BINS));
+                    hist[bin]++;
+                    total++;
+                }
+            }
+            if (total < 100) return { lo: 55, hi: 100 };
+
+            // Otsu's method: find threshold maximising inter-class variance
+            let sumAll = 0;
+            for (let b = 0; b < BINS; b++) sumAll += b * hist[b];
+
+            let sumB = 0, wB = 0, bestVar = 0, bestBin = Math.floor(BINS * 0.4);
+            for (let b = 0; b < BINS; b++) {
+                wB += hist[b];
+                if (wB === 0) continue;
+                const wF = total - wB;
+                if (wF === 0) break;
+                sumB += b * hist[b];
+                const mB = sumB / wB;
+                const mF = (sumAll - sumB) / wF;
+                const varBetween = wB * wF * (mB - mF) ** 2;
+                if (varBetween > bestVar) {
+                    bestVar = varBetween;
+                    bestBin = b;
+                }
+            }
+
+            // Convert bin back to HU — add small margin above threshold
+            const thresholdHU = HU_MIN + (bestBin / BINS) * (HU_MAX - HU_MIN);
+            const lo = Math.max(50, thresholdHU + 2);  // must be at least 50 HU
+            const hi = 100;
+            console.log(`[Bleed] Otsu threshold: ${thresholdHU.toFixed(1)} HU → range [${lo.toFixed(1)}, ${hi}]`);
+            return { lo, hi };
+        }
+        // ── apply_boundary_exclusion — per-pixel radius check against air map ─────
+        function applyBoundaryExclusion(strippedHU, bleedMask, rows, cols, radius = 8) {
+            const n = rows * cols;
+            // Air in stripped image = -1000 (we set it above)
+            const airMask = new Uint8Array(n);
+            for (let i = 0; i < n; i++) {
+                if (strippedHU[i] <= -200) airMask[i] = 1;
+            }
+
+            const result = new Uint8Array(bleedMask);
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    const idx = r * cols + c;
+                    if (!bleedMask[idx]) continue;
+                    let nearAir = false;
+                    const r0 = Math.max(0, r-radius), r1 = Math.min(rows-1, r+radius);
+                    const c0 = Math.max(0, c-radius), c1 = Math.min(cols-1, c+radius);
+                    outer: for (let nr = r0; nr <= r1; nr++) {
+                        for (let nc = c0; nc <= c1; nc++) {
+                            if (airMask[nr * cols + nc]) { nearAir = true; break outer; }
+                        }
+                    }
+                    if (nearAir) result[idx] = 0;
+                }
+            }
+            return result;
+        }
+
+
+        // ── Render Float32 [0,1] data directly to a named canvas ─────────────────
+        function renderFloat32ToCanvas(canvasId, data, srcW, srcH) {
+            const canvas = document.getElementById(canvasId);
+            canvas.width  = srcW;
+            canvas.height = srcH;
+            const ctx = canvas.getContext('2d');
+            const id  = ctx.createImageData(srcW, srcH);
+            for (let i = 0; i < data.length; i++) {
+                const v = Math.round(Math.max(0, Math.min(1, data[i])) * 255);
+                id.data[i*4] = id.data[i*4+1] = id.data[i*4+2] = v;
+                id.data[i*4+3] = 255;
+            }
+            ctx.putImageData(id, 0, 0);
+        }
+
+        // ── Render segmentation overlay directly ──────────────────────────────────
+        function renderSegmentationDirect(canvasId, srData, maskData, srcW, srcH) {
+            const canvas = document.getElementById(canvasId);
+            canvas.width  = srcW;
+            canvas.height = srcH;
+            const ctx = canvas.getContext('2d');
+            const id  = ctx.createImageData(srcW, srcH);
+            for (let i = 0; i < srData.length; i++) {
+                const baseValue = Math.round(Math.max(0, Math.min(1, srData[i])) * 255);
+                const isBleed   = maskData[i] > 0;
+                if (isBleed) {
+                    id.data[i*4]   = Math.round(baseValue * 0.4 + 255 * 0.6);
+                    id.data[i*4+1] = Math.round(baseValue * 0.4 +  60 * 0.6);
+                    id.data[i*4+2] = Math.round(baseValue * 0.4 +   0 * 0.6);
+                } else {
+                    id.data[i*4] = id.data[i*4+1] = id.data[i*4+2] = baseValue;
+                }
+                id.data[i*4+3] = 255;
+            }
+            ctx.putImageData(id, 0, 0);
+        }
+
+        // ── Parse DICOM → HU float array (handles compressed transfer syntaxes) ──
+        // ── Decode JPEG-compressed pixel data via native browser Image element ────
+        async function decodeJpegPixels(jpegBytes, rows, cols) {
+            const blob   = new Blob([jpegBytes], { type: 'image/jpeg' });
+
+            // createImageBitmap decodes off the main thread — much faster than <img>
+            let bitmap;
+            try {
+                bitmap = await createImageBitmap(blob);
+            } catch(e) {
+                // Fallback to <img> if createImageBitmap unsupported
+                return new Promise((resolve, reject) => {
+                    const url = URL.createObjectURL(blob);
+                    const img = new Image();
+                    img.onload = () => {
+                        URL.revokeObjectURL(url);
+                        const c = document.createElement('canvas');
+                        c.width = cols; c.height = rows;
+                        const ctx = c.getContext('2d');
+                        ctx.drawImage(img, 0, 0, cols, rows);
+                        const rgba = ctx.getImageData(0, 0, cols, rows).data;
+                        const pixels = new Uint8Array(rows * cols);
+                        for (let i = 0; i < pixels.length; i++) pixels[i] = rgba[i * 4];
+                        resolve(pixels);
+                    };
+                    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('JPEG decode failed')); };
+                    img.src = url;
+                });
+            }
+
+            // Draw decoded bitmap to offscreen canvas and read pixels
+            const canvas = new OffscreenCanvas(cols, rows);
+            const ctx    = canvas.getContext('2d');
+            ctx.drawImage(bitmap, 0, 0, cols, rows);
+            bitmap.close();
+            const rgba   = ctx.getImageData(0, 0, cols, rows).data;
+            const pixels = new Uint8Array(rows * cols);
+            for (let i = 0; i < pixels.length; i++) pixels[i] = rgba[i * 4];
+            return pixels;
+        }
+
+        // ── Extract raw pixel bytes from dicomParser encapsulated pixel data ──────
+        function extractPixelBytes(dataSet) {
+            const el = dataSet.elements.x7fe00010;
+            if (!el) throw new Error('No pixel data element');
+
+            // Encapsulated pixel data — use dicomParser's readEncapsulatedPixelData
+            if (el.encapsulatedPixelData) {
+                try {
+                    // readEncapsulatedPixelData returns a Uint8Array of the first frame
+                    return dicomParser.readEncapsulatedPixelData(dataSet, el, 0);
+                } catch(e) {
+                    console.warn('readEncapsulatedPixelData failed, trying manual fragment:', e);
+                    // Manual fallback: scan for JPEG SOI marker (FF D8) in byteArray
+                    const ba = dataSet.byteArray;
+                    for (let i = el.dataOffset; i < el.dataOffset + el.length - 1; i++) {
+                        if (ba[i] === 0xFF && ba[i+1] === 0xD8) {
+                            // Found JPEG start — scan for EOI marker (FF D9)
+                            for (let j = i + 2; j < el.dataOffset + el.length - 1; j++) {
+                                if (ba[j] === 0xFF && ba[j+1] === 0xD9) {
+                                    return ba.slice(i, j + 2);
+                                }
+                            }
+                            // No EOI found — return from SOI to end
+                            return ba.slice(i, el.dataOffset + el.length);
+                        }
+                    }
+                }
+            }
+
+            // Uncompressed: raw bytes at dataOffset
+            return new Uint8Array(dataSet.byteArray.buffer, el.dataOffset, el.length);
+        }
+
+        async function processSingleDicom(file) {
+            const t0 = performance.now();
+            // file may be a real File object or a stored {name, buffer} object
+            const arrayBuffer = file.buffer instanceof ArrayBuffer
+                ? file.buffer
+                : await file.arrayBuffer();
+            console.log(`[T] arrayBuffer: ${(performance.now()-t0).toFixed(0)}ms, size: ${arrayBuffer.byteLength} bytes`);
+            const t1 = performance.now();
+            const byteArray      = new Uint8Array(arrayBuffer);
+            const dataSet        = dicomParser.parseDicom(byteArray);
+            console.log(`[T] parseDicom: ${(performance.now()-t1).toFixed(0)}ms`);
+
+            const rows           = dataSet.uint16('x00280010');
+            const cols           = dataSet.uint16('x00280011');
+            const bitsAllocated  = dataSet.uint16('x00280100') || 16;
+            const pixelRep       = dataSet.uint16('x00280103') || 0;
+            const photometric    = dataSet.string('x00280004') || 'MONOCHROME2';
+            const transferSyntax = (dataSet.string('x00020010') || '').trim();
+
+            let rescaleSlope = 1.0, rescaleIntercept = 0.0;
+            try { rescaleSlope     = parseFloat(dataSet.string('x00281053')) || 1.0; } catch(e) {}
+            try { rescaleIntercept = parseFloat(dataSet.string('x00281052')) || 0.0; } catch(e) {}
+
+            const expectedPixels = rows * cols;
+            let huArray = new Float32Array(expectedPixels);
+
+            // ── Compressed transfer syntaxes: decode via browser JPEG engine ──────
+            const JPEG_TS = [
+                '1.2.840.10008.1.2.4.50',  // JPEG Baseline
+                '1.2.840.10008.1.2.4.51',  // JPEG Extended
+                '1.2.840.10008.1.2.4.57',  // JPEG Lossless non-hierarchical
+                '1.2.840.10008.1.2.4.70',  // JPEG Lossless (your files)
+            ];
+
+            if (JPEG_TS.includes(transferSyntax)) {
+                const t2 = performance.now();
+                const jpegBytes = extractPixelBytes(dataSet);
+                // Verify JPEG SOI marker (FF D8) at start
+                console.log(`[T] jpegBytes: ${jpegBytes.length}, first2: ${jpegBytes[0].toString(16)} ${jpegBytes[1].toString(16)}, last2: ${jpegBytes[jpegBytes.length-2].toString(16)} ${jpegBytes[jpegBytes.length-1].toString(16)}`);
+                const pixels8   = await decodeJpegPixels(jpegBytes, rows, cols);
+                console.log(`[T] JPEG decode: ${(performance.now()-t2).toFixed(0)}ms`);
+                // 8-bit JPEG output: scale back using window center/width if present
+                let wcStr, wwStr;
+                try { wcStr = dataSet.string('x00281050'); } catch(e) {}
+                try { wwStr = dataSet.string('x00281051'); } catch(e) {}
+                const wc = parseFloat(wcStr) || 40;
+                const ww = parseFloat(wwStr) || 400;
+                const lo = wc - ww / 2;
+                const hi = wc + ww / 2;
+                for (let i = 0; i < expectedPixels; i++) {
+                    // Map 0-255 back to the original HU range via window
+                    huArray[i] = lo + (pixels8[i] / 255) * (hi - lo);
+                }
+            } else {
+                // ── Uncompressed: read raw pixels directly ────────────────────────
+                const el = dataSet.elements.x7fe00010;
+                if (!el) throw new Error('No pixel data in ' + file.name);
+                let rawPixels;
+                if (bitsAllocated === 16) {
+                    rawPixels = pixelRep === 1
+                        ? new Int16Array(dataSet.byteArray.buffer, el.dataOffset, Math.min(el.length / 2, expectedPixels))
+                        : new Uint16Array(dataSet.byteArray.buffer, el.dataOffset, Math.min(el.length / 2, expectedPixels));
+                } else {
+                    rawPixels = new Uint8Array(dataSet.byteArray.buffer, el.dataOffset, Math.min(el.length, expectedPixels));
+                }
+                for (let i = 0; i < rawPixels.length; i++) {
+                    huArray[i] = rawPixels[i] * rescaleSlope + rescaleIntercept;
+                }
+            }
+
+            huArray = preprocessHU(huArray);
+            console.log(`[T] TOTAL processSingleDicom: ${(performance.now()-t0).toFixed(0)}ms`);
+            return { huArray, rows, cols, photometric };
+        }
+
+        // ── Full pipeline — mirrors analyze_01 exactly ──────────────────────────────
+        async function runPipelineOnSlice(dicomResult, fileName) {
+            try {
+                const tp0 = performance.now();
+                const { huArray, rows, cols, photometric } = dicomResult;
+
+                // ── Stage 1: Auto-contrast display of raw HU ─────────────────────
+                let huMin = huArray[0], huMax = huArray[0];
+                for (let i = 1; i < huArray.length; i++) {
+                    if (huArray[i] < huMin) huMin = huArray[i];
+                    if (huArray[i] > huMax) huMax = huArray[i];
+                }
+                const huRange = huMax > huMin ? huMax - huMin : 1;
+
+                const originalDisplay = new Float32Array(huArray.length);
+                for (let i = 0; i < huArray.length; i++) {
+                    let v = (huArray[i] - huMin) / huRange;
+                    if (photometric === 'MONOCHROME1') v = 1 - v;
+                    originalDisplay[i] = v;
+                }
+
+                // ── Stage 2: Skull removal — flood-fill from border, preserves bleeds ──
+                const skullStripped = removeSkull(huArray, rows, cols);
+
+                let sMin = skullStripped[0], sMax = skullStripped[0];
+                for (let i = 1; i < skullStripped.length; i++) {
+                    if (skullStripped[i] < sMin) sMin = skullStripped[i];
+                    if (skullStripped[i] > sMax) sMax = skullStripped[i];
+                }
+                const sRange = sMax > sMin ? sMax - sMin : 1;
+
+                const strippedDisplay = new Float32Array(skullStripped.length);
+                for (let i = 0; i < skullStripped.length; i++) {
+                    let v = (skullStripped[i] - sMin) / sRange;
+                    if (photometric === 'MONOCHROME1') v = 1 - v;
+                    strippedDisplay[i] = v;
+                }
+
+                // ── Stage 3: Calibrated bleed threshold (Otsu on skull-stripped) ──
+                const { lo: bleedLo, hi: bleedHi } = calibrateBleedThreshold(skullStripped);
+
+                // ── Stage 4: Bleed mask — detect on original HU to avoid missing bleeds ──
+                // Use original huArray for detection (skull-stripped can zero out bleeds near skull)
+                const rawBleedMask = new Uint8Array(huArray.length);
+                for (let i = 0; i < huArray.length; i++) {
+                    rawBleedMask[i] = (huArray[i] >= bleedLo && huArray[i] <= bleedHi) ? 1 : 0;
+                }
+                // Boundary exclusion uses skullStripped air map to remove skull-edge artifacts
+                const rawCleaned = applyBoundaryExclusion(skullStripped, rawBleedMask, rows, cols, 8);
+
+                // ── Stage 5: Connected-component analysis on bleed mask ───────────
+                // Find all connected bleed regions via BFS, keep only those ≥ MIN_BLEED_CLUSTER px.
+                // Triage = HIGH if any single connected region ≥ HIGH_BLEED_CLUSTER px.
+                const MIN_BLEED_CLUSTER  = 50;   // ignore speckle smaller than this
+                const HIGH_BLEED_CLUSTER = 100;  // any single region ≥ this → HIGH priority
+
+                const labeled   = new Int32Array(huArray.length);
+                const maskFloat = new Float32Array(huArray.length);
+                let nextLabel = 1;
+                let largestCluster = 0;
+                let totalBleedPixels = 0;
+
+                for (let seed = 0; seed < rawCleaned.length; seed++) {
+                    if (!rawCleaned[seed] || labeled[seed]) continue;
+
+                    // BFS from this seed
+                    const bq = [seed];
+                    labeled[seed] = nextLabel;
+                    let bh = 0, sz = 0;
+                    while (bh < bq.length) {
+                        const idx = bq[bh++]; sz++;
+                        const r = Math.floor(idx / cols), c = idx % cols;
+                        if (r > 0      && rawCleaned[idx-cols] && !labeled[idx-cols]) { labeled[idx-cols] = nextLabel; bq.push(idx-cols); }
+                        if (r < rows-1 && rawCleaned[idx+cols] && !labeled[idx+cols]) { labeled[idx+cols] = nextLabel; bq.push(idx+cols); }
+                        if (c > 0      && rawCleaned[idx-1]    && !labeled[idx-1])    { labeled[idx-1]    = nextLabel; bq.push(idx-1); }
+                        if (c < cols-1 && rawCleaned[idx+1]    && !labeled[idx+1])    { labeled[idx+1]    = nextLabel; bq.push(idx+1); }
+                    }
+
+                    // Only keep clusters large enough to be real bleeds
+                    if (sz >= MIN_BLEED_CLUSTER) {
+                        for (let i = 0; i < bq.length; i++) maskFloat[bq[i]] = 1;
+                        totalBleedPixels += sz;
+                        if (sz > largestCluster) largestCluster = sz;
+                    }
+                    nextLabel++;
+                }
+
+                const isHighPriority = largestCluster >= HIGH_BLEED_CLUSTER;
+                // triageScore maps largest cluster size to 0–100 for display
+                const triageScore = largestCluster;
+                console.log(`✅ ${fileName}: largest cluster=${largestCluster}px total=${totalBleedPixels}px → ${isHighPriority ? 'HIGH' : 'NORMAL'}`)
+
+                console.log(`[T] runPipelineOnSlice: ${(performance.now()-tp0).toFixed(0)}ms`);
+                return {
+                    fileName,
+                    original: originalDisplay,
+                    drrn:     strippedDisplay,
+                    lapsrn:   strippedDisplay,
+                    mask:     maskFloat,
+                    rows, cols,
+                    originalW: cols, originalH: rows,
+                    drrnW: cols,     drrnH: rows,
+                    lapsrnW: cols,   lapsrnH: rows,
+                    triageScore,
+                    isHighPriority,
+                    largestCluster,
+                    totalBleedPixels,
+                    bleedLoHU: bleedLo,
+                    bleedHiHU: bleedHi,
+                };
+            } catch (error) {
+                console.error('Pipeline error:', error);
+                throw error;
+            }
+        }
+
+        // Helper function to resize image data
+        async function resizeImageData(data, srcW, srcH, dstW, dstH) {
+            const canvas = document.createElement('canvas');
+            canvas.width = srcW;
+            canvas.height = srcH;
+            const ctx = canvas.getContext('2d');
+            const imageData = ctx.createImageData(srcW, srcH);
+            
+            for (let i = 0; i < data.length; i++) {
+                const value = Math.max(0, Math.min(255, data[i] * 255));
+                imageData.data[i * 4] = value;
+                imageData.data[i * 4 + 1] = value;
+                imageData.data[i * 4 + 2] = value;
+                imageData.data[i * 4 + 3] = 255;
+            }
+            ctx.putImageData(imageData, 0, 0);
+            
+            const resizeCanvas = document.createElement('canvas');
+            resizeCanvas.width = dstW;
+            resizeCanvas.height = dstH;
+            const resizeCtx = resizeCanvas.getContext('2d');
+            resizeCtx.drawImage(canvas, 0, 0, dstW, dstH);
+            
+            const resizedImageData = resizeCtx.getImageData(0, 0, dstW, dstH);
+            const result = new Float32Array(dstW * dstH);
+            
+            for (let i = 0; i < resizedImageData.data.length; i += 4) {
+                result[i / 4] = resizedImageData.data[i] / 255.0;
+            }
+            
+            return result;
+        }
+
+        function renderToCanvas(canvasId, data, width, height) {
+            const canvas = document.getElementById(canvasId);
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            const imageData = ctx.createImageData(width, height);
+
+            // Data is already normalised [0,1] from the pipeline.
+            // Find range only to stretch contrast if needed.
+            let min = data[0], max = data[0];
+            for (let i = 1; i < data.length; i++) {
+                if (data[i] < min) min = data[i];
+                if (data[i] > max) max = data[i];
+            }
+
+            const range = max - min;
+            for (let i = 0; i < data.length; i++) {
+                // If all values identical (blank slice), show mid-grey
+                const norm  = range > 0 ? (data[i] - min) / range : 0.5;
+                const value = Math.max(0, Math.min(255, norm * 255));
+                imageData.data[i * 4]     = value;
+                imageData.data[i * 4 + 1] = value;
+                imageData.data[i * 4 + 2] = value;
+                imageData.data[i * 4 + 3] = 255;
+            }
+
+            ctx.putImageData(imageData, 0, 0);
+        }
+
+        function renderSegmentation(canvasId, srData, maskData, width, height) {
+            const canvas = document.getElementById(canvasId);
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            const imageData = ctx.createImageData(width, height);
+
+            // Find min/max without spread
+            let min = srData[0], max = srData[0];
+            for (let i = 1; i < srData.length; i++) {
+                if (srData[i] < min) min = srData[i];
+                if (srData[i] > max) max = srData[i];
+            }
+            const range = max - min > 0 ? max - min : 1;
+
+            for (let i = 0; i < maskData.length; i++) {
+                const normalized = (srData[i] - min) / range;
+                const baseValue  = Math.max(0, Math.min(255, normalized * 255));
+                const maskValue  = maskData[i];
+
+                let r, g, b;
+                if (maskValue > 0.5) {
+                    const intensity = (maskValue - 0.5) * 2;
+                    r = 255; g = intensity * 255; b = 0;
+                } else if (maskValue > 0.3) {
+                    const intensity = (maskValue - 0.3) / 0.2;
+                    r = 255; g = intensity * 165; b = 0;
+                } else {
+                    r = baseValue; g = baseValue; b = baseValue;
+                }
+
+                const alpha = maskValue > 0.3 ? 0.6 : 0;
+                imageData.data[i * 4]     = baseValue * (1 - alpha) + r * alpha;
+                imageData.data[i * 4 + 1] = baseValue * (1 - alpha) + g * alpha;
+                imageData.data[i * 4 + 2] = baseValue * (1 - alpha) + b * alpha;
+                imageData.data[i * 4 + 3] = 255;
+            }
+
+            ctx.putImageData(imageData, 0, 0);
+        }
+
+        function displaySlice(index) {
+            if (index < 0 || index >= allResults.length) return;
+            
+            currentSliceIndex = index;
+            const result = allResults[index];
+            
+            console.log('Displaying slice:', index, 'with dimensions:', {
+                original: result.originalW + 'x' + result.originalH,
+                drrn: result.drrnW + 'x' + result.drrnH,
+                lapsrn: result.lapsrnW + 'x' + result.lapsrnH
+            });
+            
+            renderFloat32ToCanvas('originalCanvas', result.original, result.cols, result.rows);
+            renderFloat32ToCanvas('drrnCanvas',     result.drrn,     result.cols, result.rows);
+            renderFloat32ToCanvas('lapsrnCanvas',   result.lapsrn,   result.cols, result.rows);
+            renderSegmentationDirect('segmentationCanvas', result.lapsrn, result.mask, result.cols, result.rows);
+            
+            document.getElementById('currentSlice').textContent = index + 1;
+            document.getElementById('sliceFileName').textContent = result.fileName;
+            document.getElementById('sliceSlider').value = index;
+            
+            document.getElementById('infoFileName').textContent = result.fileName;
+            document.getElementById('infoSliceNum').textContent = (index + 1) + ' / ' + allResults.length;
+            document.getElementById('infoScore').textContent = result.largestCluster + ' px';
+            
+            const prioritySpan = document.getElementById('infoPriority');
+            if (result.isHighPriority) {
+                prioritySpan.innerHTML = '<span class="triage-badge triage-high">🔴 HIGH</span>';
+            } else {
+                prioritySpan.innerHTML = '<span class="triage-badge triage-normal">🟢 NORMAL</span>';
+            }
+        }
+
+        function updateSummary() {
+            document.getElementById('summaryTotal').textContent = allResults.length;
+            document.getElementById('summaryProcessed').textContent = allResults.length;
+            
+            const highPriority = allResults.filter(r => r.isHighPriority).length;
+            document.getElementById('summaryHigh').textContent = highPriority;
+            document.getElementById('summaryNormal').textContent = allResults.length - highPriority;
+            
+            const totalBleed = allResults.reduce((sum, r) => sum + (r.totalBleedPixels || 0), 0);
+            document.getElementById('summaryAvg').textContent = totalBleed.toLocaleString() + ' px';
+        }
+
+        async function processAllDicomFiles() {
+            try {
+                const files = await loadDicomFilesFromIndexedDB();
+                files.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
+
+                document.getElementById('totalSlices').textContent = files.length;
+                document.getElementById('sliceSlider').max = Math.max(0, files.length - 1);
+
+                showLoading(true, 'Processing DICOM Files...', '0 / ' + files.length);
+
+                let processed = 0;
+                const BATCH = 4;  // process 4 files in parallel
+
+                for (let i = 0; i < files.length; i += BATCH) {
+                    const batch = files.slice(i, i + BATCH);
+
+                    const batchResults = await Promise.allSettled(
+                        batch.map(async (file) => {
+                            const dicomResult = await processSingleDicom(file);
+                            return await runPipelineOnSlice(dicomResult, file.name);
+                        })
+                    );
+
+                    for (const r of batchResults) {
+                        if (r.status === 'fulfilled') {
+                            allResults.push(r.value);
+                        } else {
+                            console.error('Slice error:', r.reason);
+                        }
+                    }
+
+                    processed += batch.length;
+                    updateProgress(processed / files.length * 100);
+                    showLoading(true, 'Processing DICOM Files...', processed + ' / ' + files.length);
+
+                    // Display first slice as soon as it's ready
+                    if (allResults.length > 0 && processed <= BATCH) {
+                        allResults.sort((a, b) => a.fileName.localeCompare(b.fileName, undefined, { numeric: true }));
+                        // Hide overlay first so panel.clientWidth is non-zero
+                        showLoading(false);
+                        displaySlice(0);
+                        showLoading(true, 'Processing DICOM Files...', processed + ' / ' + files.length);
+                    }
+
+                    // Yield to browser to keep UI responsive
+                    await new Promise(r => setTimeout(r, 0));
+                }
+
+                // Final sort to ensure correct order
+                allResults.sort((a, b) => a.fileName.localeCompare(b.fileName, undefined, { numeric: true }));
+                showLoading(false);
+                // Wait for layout to settle before rendering
+                await new Promise(r => requestAnimationFrame(r));
+                displaySlice(0);
+                updateSummary();
+                console.log('✅ Processed', allResults.length, 'slices');
+
+            } catch (error) {
+                showLoading(false);
+                console.error('Fatal error:', error);
+                showError('Error: ' + error.message);
+            }
+        }
+
+        function nextSlice() {
+            if (currentSliceIndex < allResults.length - 1) {
+                displaySlice(currentSliceIndex + 1);
+            }
+        }
+
+        function previousSlice() {
+            if (currentSliceIndex > 0) {
+                displaySlice(currentSliceIndex - 1);
+            }
+        }
+
+        function goToFirst() {
+            displaySlice(0);
+        }
+
+        function goToLast() {
+            displaySlice(allResults.length - 1);
+        }
+
+        function togglePlay() {
+            isPlaying = !isPlaying;
+            const playBtn = document.getElementById('playBtn');
+            
+            if (isPlaying) {
+                playBtn.textContent = '⏸ Pause';
+                playInterval = setInterval(() => {
+                    if (currentSliceIndex < allResults.length - 1) {
+                        nextSlice();
+                    } else {
+                        displaySlice(0);
+                    }
+                }, 200);
+            } else {
+                playBtn.textContent = '▶ Play';
+                clearInterval(playInterval);
+            }
+        }
+
+        function goBack() {
+            window.location.href = 'index_upload.html';
+        }
+
+        document.getElementById('sliceSlider').addEventListener('input', function() {
+            displaySlice(parseInt(this.value));
+        });
+
+        window.onload = async function() {
+            await loadModels();
+            if (modelsLoaded) {
+                await processAllDicomFiles();
+            }
+        };
+    </script>
+</body>
+</html>
